@@ -27,12 +27,25 @@ export type ComputeHealth = {
 
 const BASE = "/orch";
 
-async function parse<T>(res: Response): Promise<T> {
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text.slice(0, 240) || `HTTP ${res.status}`);
+function mapFetchError(err: unknown): never {
+  if (err instanceof TypeError) {
+    throw new Error("编排连不上（Failed to fetch）。请确认平台已启动：http://127.0.0.1:3190/");
   }
-  return res.json() as Promise<T>;
+  throw err;
+}
+
+async function parse<T>(res: Response | Promise<Response>): Promise<T> {
+  let response: Response;
+  try {
+    response = await res;
+  } catch (err) {
+    mapFetchError(err);
+  }
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text.slice(0, 240) || `HTTP ${response.status}`);
+  }
+  return response.json() as Promise<T>;
 }
 
 export function artifactUrl(job: Job): string | null {
@@ -52,8 +65,11 @@ export const api = {
     }>(fetch(`${BASE}/health`)),
   compute: () => parse<ComputeHealth>(fetch(`${BASE}/v1/compute/health`)),
   jobs: (modality?: Modality | "all") => {
-    const q = modality && modality !== "all" ? `?modality=${modality}` : "";
-    return parse<{ items: Job[]; total: number }>(fetch(`${BASE}/v1/jobs${q}`));
+    const params = new URLSearchParams();
+    if (modality && modality !== "all") params.set("modality", modality);
+    params.set("exclude_provider", "mock");
+    const q = params.toString();
+    return parse<{ items: Job[]; total: number }>(fetch(`${BASE}/v1/jobs?${q}`));
   },
   create: (body: { modality: Modality; prompt: string; workflow_id?: string }) =>
     parse<Job>(
@@ -70,6 +86,10 @@ export const api = {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ score }),
       }),
+    ),
+  clearMock: () =>
+    parse<{ ok: boolean; removed: number; remaining: number }>(
+      fetch(`${BASE}/v1/jobs?provider=mock`, { method: "DELETE" }),
     ),
   text: (job: Job) => {
     const url = artifactUrl(job);

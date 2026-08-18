@@ -4,6 +4,7 @@ set -euo pipefail
 
 PORT="${LLM_PORT:-8088}"
 URL="http://127.0.0.1:${PORT}"
+export PATH=/root/miniconda3/bin:${PATH:-/usr/bin:/bin}
 
 echo "===== $(date -Iseconds) verify llama.cpp ====="
 code=$(curl -sS -m 8 -o /tmp/llama-models.json -w "%{http_code}" "$URL/v1/models" || true)
@@ -21,7 +22,7 @@ print("models=", ids)
 assert ids, "empty model list"
 PY
 
-body='{"model":"qwen3.8-27b","messages":[{"role":"user","content":"只回复：pong"}],"max_tokens":32,"temperature":0}'
+body='{"model":"qwen3.8-27b","messages":[{"role":"user","content":"只回复：pong"}],"max_tokens":32,"temperature":0,"chat_template_kwargs":{"enable_thinking":false}}'
 code=$(curl -sS -m 60 -o /tmp/llama-chat.json -w "%{http_code}" \
   -H 'Content-Type: application/json' -d "$body" "$URL/v1/chat/completions" || true)
 echo "chat_http=$code"

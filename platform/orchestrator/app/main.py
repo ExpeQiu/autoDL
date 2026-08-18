@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse
 
 from .adapters.comfyui import ComfyUIError, check_comfyui_health, run_video_job
-from .adapters.llm import check_llm_health, run_llm_job
+from .adapters.llm import check_llm_health, generate_text
 from .adapters.mock import run_mock_job
 from .config import settings, setup_logging
 from .models import Job, JobCreate, ScoreUpdate, utcnow
@@ -156,6 +156,45 @@ def _finish_job(job: Job, *, ok: bool, error: str | None = None) -> None:
     )
 
 
+def _run_llm_background(job_id: str, prompt: str) -> None:
+    job = JOBS.get(job_id)
+    if job is None:
+        return
+    job.status = "running"
+    job.updated_at = utcnow()
+    JOBS[job_id] = job
+    _save_jobs()
+    log.info(
+        "job_running",
+        extra={
+            "run_id": job.run_id,
+            "job_id": job.id,
+            "modality": job.modality,
+            "provider": job.provider,
+            "status": "running",
+        },
+    )
+    try:
+        settings.artifacts_dir.mkdir(parents=True, exist_ok=True)
+        text = generate_text(prompt)
+        path = settings.artifacts_dir / f"{job.id}.txt"
+        path.write_text(text, encoding="utf-8")
+        job.output_uri = str(path)
+        _finish_job(job, ok=True)
+    except Exception as exc:  # noqa: BLE001
+        _finish_job(job, ok=False, error=str(exc))
+        log.warning(
+            "job_llm_failed",
+            extra={
+                "run_id": job.run_id,
+                "job_id": job.id,
+                "modality": job.modality,
+                "provider": job.provider,
+                "status": "failed",
+            },
+        )
+
+
 def _run_comfyui_background(job_id: str, prompt: str, workflow_id: str | None, modality: str) -> None:
     job = JOBS.get(job_id)
     if job is None:
@@ -230,18 +269,11 @@ def create_job(req: JobCreate, background_tasks: BackgroundTasks) -> Job:
     if provider == "mock":
         job = run_mock_job(job, req)
     elif provider == "llm":
-        try:
-            job = run_llm_job(job, req)
-        except Exception as exc:  # noqa: BLE001
-            job.status = "failed"
-            job.error = str(exc)
-            JOBS[job.id] = job
-            _save_jobs()
-            log.warning(
-                "job_llm_failed",
-                extra={"run_id": run_id, "job_id": job_id, "provider": provider, "status": "failed"},
-            )
-            raise HTTPException(status_code=502, detail=job.error) from exc
+        JOBS[job.id] = job
+        job.output_url = _public_url(job.id)
+        _save_jobs()
+        background_tasks.add_task(_run_llm_background, job.id, req.prompt)
+        return job
     else:
         if req.modality == "image":
             raise HTTPException(status_code=501, detail="本实例无文生图权重，请设 AI_MOCK_IMAGE=true")
@@ -317,13 +349,42 @@ def set_score(job_id: str, body: ScoreUpdate) -> Job:
     return job
 
 
+@app.delete("/v1/jobs")
+def clear_jobs(provider: str | None = Query(default=None)) -> dict:
+    removed: list[str] = []
+    kept: dict[str, Job] = {}
+    for job_id, job in JOBS.items():
+        if provider and job.provider != provider:
+            kept[job_id] = job
+            continue
+        removed.append(job_id)
+        if job.output_uri:
+            path = Path(job.output_uri)
+            if path.is_file() and job.provider == "mock":
+                path.unlink(missing_ok=True)
+    JOBS.clear()
+    JOBS.update(kept)
+    _save_jobs()
+    log.info(
+        "jobs_cleared",
+        extra={"run_id": "ops", "provider": provider or "all", "status": "ok"},
+    )
+    return {"ok": True, "removed": len(removed), "remaining": len(JOBS)}
+
+
 @app.get("/v1/jobs")
 def list_jobs(
     modality: str | None = Query(default=None),
+    provider: str | None = Query(default=None),
+    exclude_provider: str | None = Query(default=None),
     limit: int = Query(default=50, ge=1, le=200),
 ) -> dict:
     items = list(JOBS.values())
     if modality:
         items = [j for j in items if j.modality == modality]
+    if provider:
+        items = [j for j in items if j.provider == provider]
+    if exclude_provider:
+        items = [j for j in items if j.provider != exclude_provider]
     items.sort(key=lambda j: j.created_at, reverse=True)
     return {"items": items[:limit], "total": len(items)}

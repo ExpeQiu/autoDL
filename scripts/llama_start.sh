@@ -45,7 +45,7 @@ nohup "$BIN" \
   --port "$PORT" \
   --alias "$ALIAS" \
   -ngl 99 \
-  -c "${LLM_CTX:-8192}" \
+  -c "${LLM_CTX:-4096}" \
   --jinja \
   >>"$LOG" 2>&1 &
 echo $! >"$PID_FILE"

@@ -89,9 +89,7 @@ if [[ "$MODE" == "fg" ]]; then
 fi
 
 if [[ "$orch_running" -eq 0 ]]; then
-  nohup "${cmd[@]}" >>"$LOG_FILE" 2>&1 &
-  echo $! >"$PID_FILE"
-  disown $! 2>/dev/null || true
+  "$PY" "$ROOT/scripts/_spawn.py" --log "$LOG_FILE" -- "${cmd[@]}" >"$PID_FILE"
   sleep 0.8
 
   if ! kill -0 "$(cat "$PID_FILE")" 2>/dev/null; then
@@ -131,12 +129,8 @@ if [[ -f "$WEB_PID_FILE" ]]; then
 fi
 
 if [[ "$web_running" -eq 0 ]]; then
-  (
-    cd "$WEB_DIR"
-    exec nohup npx next dev --hostname 127.0.0.1 --port "$WEB_PORT"
-  ) >>"$WEB_LOG" 2>&1 &
-  echo $! >"$WEB_PID_FILE"
-  disown $! 2>/dev/null || true
+  "$PY" "$ROOT/scripts/_spawn.py" --cwd "$WEB_DIR" --log "$WEB_LOG" -- \
+    npx next dev --hostname 127.0.0.1 --port "$WEB_PORT" >"$WEB_PID_FILE"
   for _ in $(seq 1 60); do
     if curl -sS -L -m 1 -o /tmp/genlab-web.html "http://127.0.0.1:${WEB_PORT}/" 2>/dev/null \
       && grep -q "生成测试平台" /tmp/genlab-web.html; then

@@ -60,11 +60,13 @@ export function Studio() {
     }
   }, [filter]);
 
+  const hasActive = jobs.some((j) => j.status === "queued" || j.status === "running");
+
   useEffect(() => {
     void refresh();
-    const t = setInterval(() => void refresh(), 8000);
+    const t = setInterval(() => void refresh(), hasActive || busy ? 2000 : 8000);
     return () => clearInterval(t);
-  }, [refresh]);
+  }, [refresh, hasActive, busy]);
 
   useEffect(() => {
     setPrompt(PRESETS[modality].prompt);
@@ -95,6 +97,16 @@ export function Studio() {
       setJobs((prev) => prev.map((j) => (j.id === updated.id ? updated : j)));
     } catch (err) {
       setError(err instanceof Error ? err.message : "打分失败");
+    }
+  };
+
+  const clearMock = async () => {
+    setError(null);
+    try {
+      await api.clearMock();
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "清理失败");
     }
   };
 
@@ -181,6 +193,7 @@ export function Studio() {
         <aside className="rounded-xl border border-stone-800 bg-stone-900/40 p-5 text-sm text-stone-400">
           <h2 className="mb-2 text-stone-200">怎么用</h2>
           <ol className="list-decimal space-y-2 pl-4">
+            <li>文本走 Qwen3.8-27B，提交后结果墙会显示「生成中」，约十几秒到一分钟出字。</li>
             <li>视频走 MiniMax H3（隧道 :8188）。首次加载权重可能要十几分钟，结果墙会从 queued 变成 succeeded。</li>
             <li>本卡无文生图权重，图片默认 Mock。</li>
             <li>对结果点 1–5 星做验收记录。</li>
@@ -191,20 +204,25 @@ export function Studio() {
       <section>
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-lg font-medium">结果墙</h2>
-          <div className="flex gap-1 rounded-md bg-stone-900 p-1">
-            {(["all", "text", "image", "video"] as const).map((key) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setFilter(key)}
-                className={cn(
-                  "rounded px-2.5 py-1 text-xs",
-                  filter === key ? "bg-stone-700 text-white" : "text-stone-400 hover:text-stone-200",
-                )}
-              >
-                {key === "all" ? "全部" : PRESETS[key].label}
-              </button>
-            ))}
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1 rounded-md bg-stone-900 p-1">
+              {(["all", "text", "image", "video"] as const).map((key) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setFilter(key)}
+                  className={cn(
+                    "rounded px-2.5 py-1 text-xs",
+                    filter === key ? "bg-stone-700 text-white" : "text-stone-400 hover:text-stone-200",
+                  )}
+                >
+                  {key === "all" ? "全部" : PRESETS[key].label}
+                </button>
+              ))}
+            </div>
+            <Button type="button" variant="outline" size="sm" onClick={() => void clearMock()}>
+              清理 Mock
+            </Button>
           </div>
         </div>
         {jobs.length === 0 ? (

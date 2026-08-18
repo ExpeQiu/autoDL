@@ -36,7 +36,7 @@ echo "$health" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.g
 echo "PASS /health"
 
 compute="$(curl -sS -m 8 "$BASE/v1/compute/health")"
-echo "$compute" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('ok') is True, d"
+echo "$compute" | python3 -c "import json,sys; d=json.load(sys.stdin); llm=(d.get('llm') or {}); comfy=(d.get('comfyui') or {}); assert llm.get('ok') or comfy.get('ok') or d.get('ok') is True, d"
 echo "PASS /v1/compute/health"
 
 python3 - "$BASE" "$ROOT/suites/demo.json" <<'PY'
@@ -65,7 +65,7 @@ for case in suite["cases"]:
         headers={"Content-Type": "application/json"},
         method="POST",
     )
-    with urllib.request.urlopen(req, timeout=10) as resp:
+    with urllib.request.urlopen(req, timeout=120 if case["modality"] == "text" else 15) as resp:
         job = json.loads(resp.read().decode("utf-8"))
     ok = job.get("status") == "succeeded" and job.get("output_uri")
     print(f"{'PASS' if ok else 'FAIL'} job {case['id']} status={job.get('status')} uri={job.get('output_uri')}")

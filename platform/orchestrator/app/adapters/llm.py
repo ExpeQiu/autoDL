@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import logging
 import re
+import time
 
 import httpx
 
@@ -8,6 +10,7 @@ from ..config import settings
 from ..models import Job, JobCreate, utcnow
 
 _THINK = re.compile(r"<think>.*?</think>", re.DOTALL | re.IGNORECASE)
+log = logging.getLogger("genlab")
 
 
 def _base() -> str:
@@ -57,12 +60,24 @@ def generate_text(prompt: str) -> str:
         "max_tokens": 1024,
         "chat_template_kwargs": {"enable_thinking": False},
     }
+    started = time.monotonic()
     with httpx.Client(timeout=settings.llm_timeout_s) as client:
         resp = client.post(_base() + "/v1/chat/completions", headers=headers, json=body)
         resp.raise_for_status()
         data = resp.json()
+    log.info(
+        "llm_chat_done",
+        extra={
+            "run_id": "llm",
+            "provider": "llamacpp",
+            "status": "ok",
+            "elapsed_ms": int((time.monotonic() - started) * 1000),
+        },
+    )
     msg = ((data.get("choices") or [{}])[0].get("message") or {})
-    text = msg.get("content") or msg.get("reasoning_content") or ""
+    text = msg.get("content") or ""
+    if not text.strip():
+        text = msg.get("reasoning_content") or ""
     text = _THINK.sub("", text).strip()
     if not text:
         raise RuntimeError(f"empty llm reply: {data}")
