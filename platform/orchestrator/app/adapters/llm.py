@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import re
 import time
+from typing import Any
 
 import httpx
 
@@ -49,7 +50,7 @@ async def check_llm_health(timeout_s: float = 5.0) -> dict:
         }
 
 
-def generate_text(prompt: str) -> str:
+def generate_text(prompt: str) -> dict[str, Any]:
     headers = {"Content-Type": "application/json"}
     if settings.llm_api_key:
         headers["Authorization"] = f"Bearer {settings.llm_api_key}"
@@ -65,13 +66,15 @@ def generate_text(prompt: str) -> str:
         resp = client.post(_base() + "/v1/chat/completions", headers=headers, json=body)
         resp.raise_for_status()
         data = resp.json()
+    elapsed_ms = int((time.monotonic() - started) * 1000)
+    usage = data.get("usage") if isinstance(data.get("usage"), dict) else {}
     log.info(
         "llm_chat_done",
         extra={
             "run_id": "llm",
             "provider": "llamacpp",
             "status": "ok",
-            "elapsed_ms": int((time.monotonic() - started) * 1000),
+            "elapsed_ms": elapsed_ms,
         },
     )
     msg = ((data.get("choices") or [{}])[0].get("message") or {})
@@ -81,17 +84,31 @@ def generate_text(prompt: str) -> str:
     text = _THINK.sub("", text).strip()
     if not text:
         raise RuntimeError(f"empty llm reply: {data}")
-    return text
+    return {
+        "text": text,
+        "elapsed_ms": elapsed_ms,
+        "model": data.get("model") or settings.llm_model,
+        "prompt_tokens": usage.get("prompt_tokens"),
+        "completion_tokens": usage.get("completion_tokens"),
+        "total_tokens": usage.get("total_tokens"),
+    }
 
 
 def run_llm_job(job: Job, req: JobCreate) -> Job:
     job.status = "running"
-    job.updated_at = utcnow()
-    text = generate_text(req.prompt)
+    job.started_at = utcnow()
+    job.updated_at = job.started_at
+    result = generate_text(req.prompt)
     settings.artifacts_dir.mkdir(parents=True, exist_ok=True)
     path = settings.artifacts_dir / f"{job.id}.txt"
-    path.write_text(text, encoding="utf-8")
+    path.write_text(result["text"], encoding="utf-8")
     job.output_uri = str(path)
+    job.model = result.get("model")
+    job.prompt_tokens = result.get("prompt_tokens")
+    job.completion_tokens = result.get("completion_tokens")
+    job.total_tokens = result.get("total_tokens")
+    job.elapsed_ms = result.get("elapsed_ms")
     job.status = "succeeded"
-    job.updated_at = utcnow()
+    job.finished_at = utcnow()
+    job.updated_at = job.finished_at
     return job

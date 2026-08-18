@@ -33,6 +33,15 @@ class Job(BaseModel):
     output_url: str | None = None
     error: str | None = None
     score: int | None = Field(default=None, ge=1, le=5)
+    model: str | None = None
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
+    elapsed_ms: int | None = None
+    prompt_tokens: int | None = None
+    completion_tokens: int | None = None
+    total_tokens: int | None = None
+    output_bytes: int | None = None
+    output_chars: int | None = None
     created_at: datetime
     updated_at: datetime
 

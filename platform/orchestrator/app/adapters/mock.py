@@ -19,7 +19,9 @@ def run_mock_job(job: Job, req: JobCreate) -> Job:
     digest = hashlib.sha1(req.prompt.encode("utf-8")).hexdigest()[:10]
     now = utcnow()
     job.status = "running"
+    job.started_at = now
     job.updated_at = now
+    job.model = "mock"
 
     if req.modality == "text":
         body = f"[mock-text] {req.prompt}\nrun_id={job.run_id} job_id={job.id}"
@@ -45,5 +47,15 @@ def run_mock_job(job: Job, req: JobCreate) -> Job:
 
     job.status = "succeeded"
     job.output_uri = uri
-    job.updated_at = utcnow()
+    job.finished_at = utcnow()
+    job.updated_at = job.finished_at
+    job.elapsed_ms = max(0, int((job.finished_at - (job.started_at or job.created_at)).total_seconds() * 1000))
+    path = Path(uri)
+    if path.is_file():
+        job.output_bytes = path.stat().st_size
+        if path.suffix.lower() == ".txt" or req.modality == "text":
+            job.output_chars = len(path.read_text(encoding="utf-8"))
+            job.prompt_tokens = max(1, len(req.prompt) // 4)
+            job.completion_tokens = max(1, (job.output_chars or 1) // 4)
+            job.total_tokens = (job.prompt_tokens or 0) + (job.completion_tokens or 0)
     return job

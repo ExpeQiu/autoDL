@@ -13,7 +13,33 @@ export type Job = {
   output_url: string | null;
   error: string | null;
   score: number | null;
+  model: string | null;
+  started_at: string | null;
+  finished_at: string | null;
+  elapsed_ms: number | null;
+  prompt_tokens: number | null;
+  completion_tokens: number | null;
+  total_tokens: number | null;
+  output_bytes: number | null;
+  output_chars: number | null;
   created_at: string;
+  updated_at: string;
+};
+
+export type JobStats = {
+  total: number;
+  by_status: Record<JobStatus, number>;
+  by_modality: Partial<Record<Modality, number>>;
+  by_provider: Record<string, number>;
+  success_rate: number | null;
+  scored_count: number;
+  avg_score: number | null;
+  score_hist: Record<string, number>;
+  avg_elapsed_ms: number | null;
+  p50_elapsed_ms: number | null;
+  p95_elapsed_ms: number | null;
+  avg_prompt_tokens: number | null;
+  avg_completion_tokens: number | null;
 };
 
 export type ComputeHealth = {
@@ -26,6 +52,13 @@ export type ComputeHealth = {
 };
 
 const BASE = "/orch";
+
+function jobQuery(modality?: Modality | "all") {
+  const params = new URLSearchParams();
+  if (modality && modality !== "all") params.set("modality", modality);
+  params.set("exclude_provider", "mock");
+  return params.toString();
+}
 
 function mapFetchError(err: unknown): never {
   if (err instanceof TypeError) {
@@ -65,11 +98,12 @@ export const api = {
     }>(fetch(`${BASE}/health`)),
   compute: () => parse<ComputeHealth>(fetch(`${BASE}/v1/compute/health`)),
   jobs: (modality?: Modality | "all") => {
-    const params = new URLSearchParams();
-    if (modality && modality !== "all") params.set("modality", modality);
-    params.set("exclude_provider", "mock");
-    const q = params.toString();
+    const q = jobQuery(modality);
     return parse<{ items: Job[]; total: number }>(fetch(`${BASE}/v1/jobs?${q}`));
+  },
+  stats: (modality?: Modality | "all") => {
+    const q = jobQuery(modality);
+    return parse<JobStats>(fetch(`${BASE}/v1/jobs/stats?${q}`));
   },
   create: (body: { modality: Modality; prompt: string; workflow_id?: string }) =>
     parse<Job>(
@@ -87,6 +121,8 @@ export const api = {
         body: JSON.stringify({ score }),
       }),
     ),
+  remove: (id: string) =>
+    parse<{ ok: boolean; removed: string }>(fetch(`${BASE}/v1/jobs/${id}`, { method: "DELETE" })),
   clearMock: () =>
     parse<{ ok: boolean; removed: number; remaining: number }>(
       fetch(`${BASE}/v1/jobs?provider=mock`, { method: "DELETE" }),

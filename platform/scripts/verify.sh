@@ -40,7 +40,7 @@ echo "$compute" | python3 -c "import json,sys; d=json.load(sys.stdin); llm=(d.ge
 echo "PASS /v1/compute/health"
 
 python3 - "$BASE" "$ROOT/suites/demo.json" <<'PY'
-import json, sys, urllib.request
+import json, sys, time, urllib.request
 
 base, suite_path = sys.argv[1], sys.argv[2]
 health = json.loads(urllib.request.urlopen(base + "/health", timeout=5).read().decode())
@@ -67,8 +67,12 @@ for case in suite["cases"]:
     )
     with urllib.request.urlopen(req, timeout=120 if case["modality"] == "text" else 15) as resp:
         job = json.loads(resp.read().decode("utf-8"))
+    deadline = time.time() + (180 if case["modality"] == "text" else 15)
+    while job.get("status") in ("queued", "running") and time.time() < deadline:
+        time.sleep(1.5)
+        job = json.loads(urllib.request.urlopen(base + "/v1/jobs/" + job["id"], timeout=10).read().decode())
     ok = job.get("status") == "succeeded" and job.get("output_uri")
-    print(f"{'PASS' if ok else 'FAIL'} job {case['id']} status={job.get('status')} uri={job.get('output_uri')}")
+    print(f"{'PASS' if ok else 'FAIL'} job {case['id']} status={job.get('status')} uri={job.get('output_uri')} elapsed_ms={job.get('elapsed_ms')}")
     if not ok:
         failed.append(case["id"])
 if failed:
@@ -89,7 +93,7 @@ grep -q "生成测试平台" /tmp/genlab-web.html
 echo "PASS web :$WEB_PORT"
 
 python3 - "$BASE" <<'PY'
-import json, sys, urllib.request
+import json, sys, urllib.error, urllib.request
 base = sys.argv[1]
 body = json.dumps({"modality": "image", "prompt": "verify score", "workflow_id": "t2i.demo"}).encode()
 req = urllib.request.Request(base + "/v1/jobs", data=body, headers={"Content-Type": "application/json"}, method="POST")
@@ -109,7 +113,20 @@ req3 = urllib.request.Request(base + f"/v1/jobs/{jid}/file")
 with urllib.request.urlopen(req3, timeout=10) as resp:
     data = resp.read()
 assert len(data) > 20
-print("PASS score+file", jid)
+assert job.get("elapsed_ms") is not None or scored.get("elapsed_ms") is not None
+stats = json.loads(urllib.request.urlopen(base + "/v1/jobs/stats", timeout=10).read())
+assert stats.get("total") >= 1, stats
+assert "by_status" in stats and "avg_score" in stats, stats
+req4 = urllib.request.Request(base + f"/v1/jobs/{jid}", method="DELETE")
+with urllib.request.urlopen(req4, timeout=10) as resp:
+    deleted = json.loads(resp.read().decode())
+assert deleted.get("ok") is True, deleted
+try:
+    urllib.request.urlopen(base + f"/v1/jobs/{jid}", timeout=10)
+    raise SystemExit("FAIL deleted job still exists")
+except urllib.error.HTTPError as e:
+    assert e.code == 404, e.code
+print("PASS score+file+stats+delete", jid)
 PY
 
 llm_json="$(curl -sS -m 8 "$BASE/v1/llm/health" || true)"
@@ -129,8 +146,13 @@ body = json.dumps({"modality": "text", "prompt": "只回复：ok", "workflow_id"
 req = urllib.request.Request(base + "/v1/jobs", data=body, headers={"Content-Type": "application/json"}, method="POST")
 with urllib.request.urlopen(req, timeout=180) as resp:
     job = json.loads(resp.read().decode())
+import time
+deadline = time.time() + 180
+while job.get("status") in ("queued", "running") and time.time() < deadline:
+    time.sleep(1.5)
+    job = json.loads(urllib.request.urlopen(base + "/v1/jobs/" + job["id"], timeout=10).read().decode())
 assert job.get("provider") == "llm" and job.get("status") == "succeeded", job
-print("PASS llama.cpp text", job.get("id"), job.get("output_uri"))
+print("PASS llama.cpp text", job.get("id"), job.get("output_uri"), "elapsed_ms=", job.get("elapsed_ms"), "tokens=", job.get("prompt_tokens"), job.get("completion_tokens"))
 PY
 
 echo "PASS verify"
