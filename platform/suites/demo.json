@@ -1,0 +1,24 @@
+{
+  "id": "suite.demo.p0",
+  "name": "P0 Mock 三模态",
+  "cases": [
+    {
+      "id": "text.hello",
+      "modality": "text",
+      "prompt": "用一句话介绍生成测试平台。",
+      "workflow_id": "llm.chat"
+    },
+    {
+      "id": "image.cat",
+      "modality": "image",
+      "prompt": "a calico cat on a wooden table, studio light",
+      "workflow_id": "t2i.demo"
+    },
+    {
+      "id": "video.walk",
+      "modality": "video",
+      "prompt": "a person walking through a sunlit corridor, cinematic",
+      "workflow_id": "t2v.u03"
+    }
+  ]
+}

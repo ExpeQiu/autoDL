@@ -1,0 +1,221 @@
+{
+  "$schema": "https://compo.dev/schemas/cli-agent-manifest/v1",
+  "name": "autodl",
+  "version": "0.1.0",
+  "cli": {
+    "command": "autodl",
+    "install": "pip install -e .",
+    "verify": "./scripts/verify.sh"
+  },
+  "commands": [
+    {
+      "name": "config-check",
+      "description": "检查配置（密钥脱敏）",
+      "cli_template": "autodl config check --format json",
+      "agent_safe": true,
+      "interactive": false,
+      "timeout_sec": 10,
+      "params": {},
+      "output": { "format": "json" },
+      "exit_codes": { "0": "success", "1": "config_error" }
+    },
+    {
+      "name": "compute-health",
+      "description": "ComfyUI + llama 探活",
+      "cli_template": "autodl --demo compute health --format json",
+      "agent_safe": true,
+      "interactive": false,
+      "timeout_sec": 15,
+      "params": {},
+      "output": { "format": "json" },
+      "exit_codes": { "0": "success", "2": "not_ready" }
+    },
+    {
+      "name": "instance-status",
+      "description": "实例开关机与 SSH 端口",
+      "cli_template": "autodl --demo instance status --format json",
+      "agent_safe": true,
+      "interactive": false,
+      "timeout_sec": 30,
+      "params": {},
+      "output": { "format": "json" },
+      "exit_codes": { "0": "success", "2": "not_ready" }
+    },
+    {
+      "name": "instance-list",
+      "description": "实例列表",
+      "cli_template": "autodl --demo instance list --format json",
+      "agent_safe": true,
+      "interactive": false,
+      "timeout_sec": 30,
+      "params": {},
+      "output": { "format": "json" },
+      "exit_codes": { "0": "success" }
+    },
+    {
+      "name": "wallet-balance",
+      "description": "账户余额",
+      "cli_template": "autodl --demo wallet balance --format json",
+      "agent_safe": true,
+      "interactive": false,
+      "timeout_sec": 15,
+      "params": {},
+      "output": { "format": "json" },
+      "exit_codes": { "0": "success", "4": "auth_or_balance" }
+    },
+    {
+      "name": "tunnel-status",
+      "description": "本机隧道端口是否在听",
+      "cli_template": "autodl tunnel status --format json",
+      "agent_safe": true,
+      "interactive": false,
+      "timeout_sec": 10,
+      "params": {},
+      "output": { "format": "json" },
+      "exit_codes": { "0": "success", "2": "not_ready" }
+    },
+    {
+      "name": "tunnel-start",
+      "description": "后台 SSH 转发（禁止前台等待）",
+      "cli_template": "autodl tunnel start --format json",
+      "agent_safe": "background_only",
+      "interactive": false,
+      "timeout_sec": 0,
+      "spawn_hint": "sessions_spawn | background",
+      "reason": "阻塞式隧道，禁止 Agent 前台同步等待"
+    },
+    {
+      "name": "job-submit-demo",
+      "description": "提交 Mock 生成任务，不碰 GPU",
+      "cli_template": "autodl job submit --modality {modality} --prompt {prompt} --demo --format json",
+      "agent_safe": true,
+      "interactive": false,
+      "timeout_sec": 30,
+      "params": {
+        "modality": {
+          "type": "string",
+          "enum": ["text", "image", "video"],
+          "default": "image",
+          "description": "模态"
+        },
+        "prompt": {
+          "type": "string",
+          "description": "提示词"
+        }
+      },
+      "output": {
+        "format": "json",
+        "schema_ref": "#/definitions/job_envelope"
+      },
+      "exit_codes": { "0": "success", "1": "config_error", "3": "compute_fail" }
+    },
+    {
+      "name": "job-get",
+      "description": "查询任务",
+      "cli_template": "autodl job get {job_id} --format json",
+      "agent_safe": true,
+      "interactive": false,
+      "timeout_sec": 10,
+      "params": {
+        "job_id": { "type": "string", "description": "任务 ID" }
+      },
+      "output": { "format": "json" },
+      "exit_codes": { "0": "success", "2": "not_found" }
+    },
+    {
+      "name": "job-list",
+      "description": "任务列表",
+      "cli_template": "autodl job list --format json",
+      "agent_safe": true,
+      "interactive": false,
+      "timeout_sec": 10,
+      "params": {},
+      "output": { "format": "json" },
+      "exit_codes": { "0": "success" }
+    },
+    {
+      "name": "job-file",
+      "description": "拉取任务产物",
+      "cli_template": "autodl job file {job_id} --format json",
+      "agent_safe": true,
+      "interactive": false,
+      "timeout_sec": 60,
+      "params": {
+        "job_id": { "type": "string", "description": "任务 ID" }
+      },
+      "output": { "format": "json" },
+      "exit_codes": { "0": "success", "2": "not_found" }
+    },
+    {
+      "name": "llm-chat-demo",
+      "description": "Mock 文本一轮",
+      "cli_template": "autodl llm chat --prompt {prompt} --demo --format json",
+      "agent_safe": true,
+      "interactive": false,
+      "timeout_sec": 30,
+      "params": {
+        "prompt": { "type": "string", "description": "提示词" }
+      },
+      "output": { "format": "json" },
+      "exit_codes": { "0": "success" }
+    },
+    {
+      "name": "instance-power-on",
+      "description": "有卡开机（计费）",
+      "cli_template": "autodl instance power-on --wait --format json",
+      "agent_safe": "write_with_confirm",
+      "interactive": false,
+      "timeout_sec": 180,
+      "human_required": true,
+      "reason": "产生 GPU 费用，需 AUTODL_ALLOW_POWER=true"
+    },
+    {
+      "name": "instance-power-off",
+      "description": "关机（运行中任务会断）",
+      "cli_template": "autodl instance power-off --format json",
+      "agent_safe": "write_with_confirm",
+      "interactive": false,
+      "timeout_sec": 60,
+      "human_required": true,
+      "reason": "会中断正在跑的任务"
+    },
+    {
+      "name": "job-submit-live",
+      "description": "真算力提交（无 --demo）",
+      "cli_template": "autodl job submit --modality {modality} --prompt {prompt} --format json",
+      "agent_safe": "write_with_confirm",
+      "interactive": false,
+      "timeout_sec": 60,
+      "human_required": true,
+      "reason": "消耗 GPU；P0 未启用，请用 --demo"
+    }
+  ],
+  "definitions": {
+    "job_envelope": {
+      "type": "object",
+      "required": ["module", "data_source", "ok", "items"],
+      "properties": {
+        "module": { "const": "job.submit" },
+        "data_source": { "enum": ["demo", "live", "cache"] },
+        "ok": { "type": "boolean" },
+        "run_id": { "type": "string" },
+        "job_id": { "type": "string" },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "run_id", "modality", "status", "provider"],
+            "properties": {
+              "id": { "type": "string" },
+              "run_id": { "type": "string" },
+              "modality": { "enum": ["text", "image", "video"] },
+              "status": { "enum": ["queued", "running", "succeeded", "failed"] },
+              "provider": { "enum": ["mock", "comfyui", "llm"] },
+              "output_uri": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

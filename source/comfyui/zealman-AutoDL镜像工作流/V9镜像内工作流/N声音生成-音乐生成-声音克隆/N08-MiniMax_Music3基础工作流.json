@@ -1,0 +1,966 @@
+{
+  "id": "08882d3e-437d-43da-b498-083de04a60a6",
+  "revision": 0,
+  "last_node_id": 79,
+  "last_link_id": 85,
+  "nodes": [
+    {
+      "id": 39,
+      "type": "MarkdownNote",
+      "pos": [
+        1966.6283930201905,
+        1674.6754316971744
+      ],
+      "size": [
+        884.1855094524981,
+        459.9397176808859
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: MiniMax Music 3",
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.8",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "<h2>迷你音乐3</h2><p>MiniMax的音乐生成模型，可创建长达5分钟的完整歌曲，结构稳定，音质高。两个输入驱动它： <strong>字幕</strong> （结构化音乐描述：风格、情绪、人声、编曲）和 <strong>歌词</strong> （与 <code>[intro]</code> <code>[verse]</code> <code>[chorus]</code> <code>[bridge]</code> <code>[outro]</code> 控制歌曲结构的标签）。</p><h3>参数</h3><table style=\"min-width: 50px;\"><colgroup><col style=\"min-width: 25px;\"><col style=\"min-width: 25px;\"></colgroup><tbody><tr><th colspan=\"1\" rowspan=\"1\"><p>参数</p></th><th colspan=\"1\" rowspan=\"1\"><p>描述</p></th></tr><tr><td colspan=\"1\" rowspan=\"1\"><p>字幕</p></td><td colspan=\"1\" rowspan=\"1\"><p>音乐描述。将其分为三个部分——全局元数据→ 声乐细节→ 安排。越具体，结果越接近。</p></td></tr><tr><td colspan=\"1\" rowspan=\"1\"><p>歌词</p></td><td colspan=\"1\" rowspan=\"1\"><p>歌词+章节标签。标签是唯一可执行的结构指令；抒情文本本身只传达情绪。</p></td></tr><tr><td colspan=\"1\" rowspan=\"1\"><p>最大持续时间</p></td><td colspan=\"1\" rowspan=\"1\"><p>目标歌曲长度（秒）（默认120=2分钟；该型号最多支持~300秒/5分钟）。较长的歌曲需要更多的时间和VRAM。</p></td></tr><tr><td colspan=\"1\" rowspan=\"1\"><p>种子</p></td><td colspan=\"1\" rowspan=\"1\"><p>这一代的随机种子。保持固定以再现同一首歌；改变它以获得不同的看法。</p></td></tr><tr><td colspan=\"1\" rowspan=\"1\"><p>模型文件</p></td><td colspan=\"1\" rowspan=\"1\"><p>扩散模型/文本编码器/VAE。</p></td></tr><tr><td colspan=\"1\" rowspan=\"1\"><p>平铺解码</p></td><td colspan=\"1\" rowspan=\"1\"><p>在重叠的图块中解码音频VAE，以大幅降低VRAM使用率，这对低VRAM GPU上的长歌很有帮助。速度稍慢，瓷砖边界出现接缝的风险很小；在高VRAM GPU上关闭它以获得最佳质量。</p></td></tr></tbody></table><h3>快速写作指南</h3><p>你可以找到一个官方 <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"https://github.com/MiniMax-AI/MiniMax-Music3\">音乐字幕重写技巧</a></p>"
+      ],
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 44,
+      "type": "MiniMaxMusic3TextEncode",
+      "pos": [
+        2891.4619903239045,
+        1200
+      ],
+      "size": [
+        700.0591175255236,
+        733.7271343362715
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "showAdvanced": true,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 64
+        },
+        {
+          "name": "seed",
+          "type": "INT",
+          "widget": {
+            "name": "seed"
+          },
+          "link": 65
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            68,
+            70
+          ]
+        },
+        {
+          "name": "seconds",
+          "type": "FLOAT",
+          "links": [
+            76
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.31.0",
+        "Node name for S&R": "MiniMaxMusic3TextEncode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.8",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "### Global Metadata\nA creative 30-second Chinese guochao hip-hop anthem at 112 BPM in 4/4. Fuse thunderous Chinese Dagu, piercing Suona, Pipa, Guzheng, Erhu, gongs, cymbals, modern hip-hop drums, and powerful sub-bass. Fiery, heroic, youthful, and cinematic, with the image of an ancient red dragon awakening in a modern city. End sharply at exactly 30 seconds.\n\n### Vocal Details\nA commanding male Mandarin rapper with a deep, powerful chest voice. Use a brisk, punchy flow with crisp consonants, strong rhythmic accents, and continuous forward momentum. Deliver the Chorus like a forceful rhythmic proclamation without slowing down. Start rapping on the first downbeat. No laughter, chuckles, spoken ad-libs, vocal improvisation, or prolonged melisma.\n\n### Arrangement\nBegin with the first lyric and a synchronized Dagu strike; no instrumental intro. Keep heavy drums and sub-bass moving continuously beneath the vocal. Use short ascending Suona strikes only in the gaps between lines, while Pipa and Guzheng add sharp rhythmic attacks. Expand into the full Chinese ensemble at the Chorus without changing tempo. No instrumental interlude, solo, repeated section, second Chorus, or fade-out. After the final word, play one compact Dagu-and-Suona closing cadence, then cut all sound sharply at exactly 30.0 seconds.",
+        "[Verse]\n大鼓落，惊雷撞城墙  \n唢呐起，赤龙破穹苍  \n黄河在低音里翻滚发烫  \n我踩五千年的鼓点登场  \n\n[Chorus]\n墨作浪，笔作枪  \n一撇一捺撑起东方  \n让世界听见山河回响  \n这就是华夏少年的锋芒",
+        222,
+        "fixed",
+        30,
+        1.5,
+        60
+      ],
+      "color": "#aecf2a",
+      "bgcolor": "#393e25"
+    },
+    {
+      "id": 46,
+      "type": "CLIPLoader",
+      "pos": [
+        1993.4619903239045,
+        1476
+      ],
+      "size": [
+        480,
+        120
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            64
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.31.0",
+        "Node name for S&R": "CLIPLoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.8",
+          "input_ue_unconnectable": {}
+        },
+        "models": [
+          {
+            "name": "minimax_music3_text_encoder_pruned_int8_convrot.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/MiniMax-Music-3/resolve/main/text_encoders/minimax_music3_text_encoder_pruned_int8_convrot.safetensors",
+            "directory": "text_encoders"
+          }
+        ]
+      },
+      "widgets_values": [
+        "minimax_music3_text_encoder_bf16.safetensors",
+        "minimax",
+        "default"
+      ]
+    },
+    {
+      "id": 47,
+      "type": "VAELoader",
+      "pos": [
+        1993.4619903239045,
+        1200
+      ],
+      "size": [
+        480,
+        70
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            75,
+            78
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.31.0",
+        "Node name for S&R": "VAELoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.8",
+          "input_ue_unconnectable": {}
+        },
+        "models": [
+          {
+            "name": "minimax_music3_dav.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/MiniMax-Music-3/resolve/main/vae/minimax_music3_dav.safetensors",
+            "directory": "vae"
+          }
+        ]
+      },
+      "widgets_values": [
+        "minimax_music3_dav.safetensors"
+      ]
+    },
+    {
+      "id": 48,
+      "type": "ConditioningZeroOut",
+      "pos": [
+        3655.521107849428,
+        1200
+      ],
+      "size": [
+        290,
+        40
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 68
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            71
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.31.0",
+        "Node name for S&R": "ConditioningZeroOut",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.8",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 49,
+      "type": "KSampler",
+      "pos": [
+        4009.521107849428,
+        1200
+      ],
+      "size": [
+        290,
+        270
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 69
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 70
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 71
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 72
+        },
+        {
+          "name": "seed",
+          "type": "INT",
+          "widget": {
+            "name": "seed"
+          },
+          "link": 73
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            74,
+            77
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.31.0",
+        "Node name for S&R": "KSampler",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.8",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        1111111112,
+        "fixed",
+        30,
+        1.7,
+        "euler",
+        "simple",
+        1
+      ]
+    },
+    {
+      "id": 50,
+      "type": "SeedNode",
+      "pos": [
+        3645.0863388915145,
+        1330.246628422253
+      ],
+      "size": [
+        307.2777121248437,
+        82
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "seed",
+          "type": "INT",
+          "links": [
+            65,
+            73
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.31.0",
+        "Node name for S&R": "SeedNode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.8",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        149178479950158,
+        "randomize"
+      ],
+      "color": "#203E11FF",
+      "bgcolor": "#305D1AFF"
+    },
+    {
+      "id": 51,
+      "type": "VAEDecodeAudioTiled",
+      "pos": [
+        2542.4619903239045,
+        1348
+      ],
+      "size": [
+        280,
+        110
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 74
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 75
+        }
+      ],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            85
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.31.0",
+        "Node name for S&R": "VAEDecodeAudioTiled",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.8",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        1536,
+        64
+      ]
+    },
+    {
+      "id": 52,
+      "type": "UNETLoader",
+      "pos": [
+        1993.4619903239045,
+        1328
+      ],
+      "size": [
+        480,
+        90
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "showAdvanced": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            69
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.31.0",
+        "Node name for S&R": "UNETLoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.8",
+          "input_ue_unconnectable": {}
+        },
+        "models": [
+          {
+            "name": "minimax_music3_dit_fp16.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/MiniMax-Music-3/resolve/main/diffusion_models/minimax_music3_dit_fp16.safetensors",
+            "directory": "diffusion_models"
+          }
+        ]
+      },
+      "widgets_values": [
+        "minimax_music3/minimax_music3_dit_fp32.safetensors",
+        "default"
+      ]
+    },
+    {
+      "id": 53,
+      "type": "EmptyMiniMaxMusic3LatentAudio",
+      "pos": [
+        2537.4619903239045,
+        1200
+      ],
+      "size": [
+        290,
+        90
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "seconds",
+          "type": "FLOAT",
+          "widget": {
+            "name": "seconds"
+          },
+          "link": 76
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            72
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.31.0",
+        "Node name for S&R": "EmptyMiniMaxMusic3LatentAudio",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.8",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        120,
+        1
+      ]
+    },
+    {
+      "id": 54,
+      "type": "VAEDecodeAudio",
+      "pos": [
+        2567.4619903239045,
+        1516
+      ],
+      "size": [
+        230,
+        60
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 77
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 78
+        }
+      ],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            80
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.31.0",
+        "Node name for S&R": "VAEDecodeAudio",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.8",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 56,
+      "type": "SaveAudioAdvanced",
+      "pos": [
+        4363.5211078494285,
+        1418
+      ],
+      "size": [
+        750,
+        160
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 80
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.31.0",
+        "Node name for S&R": "SaveAudioAdvanced",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.8",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "audio/audio_minimax_music3",
+        "mp3",
+        "V0"
+      ]
+    },
+    {
+      "id": 69,
+      "type": "SaveAudioAdvanced",
+      "pos": [
+        4523.5211078494285,
+        1200
+      ],
+      "size": [
+        430,
+        160
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 85
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.32.0",
+        "Node name for S&R": "SaveAudioAdvanced",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        }
+      },
+      "widgets_values": [
+        "audio/ComfyUI",
+        "mp3",
+        "V0"
+      ]
+    },
+    {
+      "id": 77,
+      "type": "Label (rgthree)",
+      "pos": [
+        1981.2961438927796,
+        724.1719759552298
+      ],
+      "size": [
+        2192.0654296875,
+        150
+      ],
+      "flags": {
+        "allow_interaction": true
+      },
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "N08-MiniMax_Music3基础工作流",
+      "properties": {
+        "fontSize": 150,
+        "fontFamily": "Arial",
+        "fontColor": "#ffff00",
+        "textAlign": "left",
+        "backgroundColor": "transparent",
+        "padding": 0,
+        "borderRadius": 0,
+        "angle": 0,
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        },
+        "widget_ue_connectable": {}
+      },
+      "color": "#fff0",
+      "bgcolor": "#fff0"
+    },
+    {
+      "id": 78,
+      "type": "Label (rgthree)",
+      "pos": [
+        1984.5538550682547,
+        869.2811509079058
+      ],
+      "size": [
+        1736.484375,
+        80
+      ],
+      "flags": {
+        "allow_interaction": true
+      },
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "云端镜像https://autodl.art/app/market/252?v=679",
+      "properties": {
+        "fontSize": 80,
+        "fontFamily": "Arial",
+        "fontColor": "#00ff00",
+        "textAlign": "left",
+        "backgroundColor": "transparent",
+        "padding": 0,
+        "borderRadius": 0,
+        "angle": 0,
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        },
+        "widget_ue_connectable": {}
+      },
+      "color": "#fff0",
+      "bgcolor": "#fff0"
+    },
+    {
+      "id": 79,
+      "type": "Label (rgthree)",
+      "pos": [
+        1975.165359624133,
+        967.5137905888162
+      ],
+      "size": [
+        1211.103515625,
+        60
+      ],
+      "flags": {
+        "allow_interaction": true
+      },
+      "order": 7,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "🐧1群1046279436（满） 🐧2群1102535136",
+      "properties": {
+        "fontSize": 60,
+        "fontFamily": "Arial",
+        "fontColor": "#ff5500",
+        "textAlign": "left",
+        "backgroundColor": "transparent",
+        "padding": 0,
+        "borderRadius": 0,
+        "angle": 0,
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        },
+        "widget_ue_connectable": {}
+      },
+      "color": "#fff0",
+      "bgcolor": "#fff0"
+    }
+  ],
+  "links": [
+    [
+      64,
+      46,
+      0,
+      44,
+      0,
+      "CLIP"
+    ],
+    [
+      65,
+      50,
+      0,
+      44,
+      1,
+      "INT"
+    ],
+    [
+      68,
+      44,
+      0,
+      48,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      69,
+      52,
+      0,
+      49,
+      0,
+      "MODEL"
+    ],
+    [
+      70,
+      44,
+      0,
+      49,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      71,
+      48,
+      0,
+      49,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      72,
+      53,
+      0,
+      49,
+      3,
+      "LATENT"
+    ],
+    [
+      73,
+      50,
+      0,
+      49,
+      4,
+      "INT"
+    ],
+    [
+      74,
+      49,
+      0,
+      51,
+      0,
+      "LATENT"
+    ],
+    [
+      75,
+      47,
+      0,
+      51,
+      1,
+      "VAE"
+    ],
+    [
+      76,
+      44,
+      1,
+      53,
+      0,
+      "FLOAT"
+    ],
+    [
+      77,
+      49,
+      0,
+      54,
+      0,
+      "LATENT"
+    ],
+    [
+      78,
+      47,
+      0,
+      54,
+      1,
+      "VAE"
+    ],
+    [
+      80,
+      54,
+      0,
+      56,
+      0,
+      "AUDIO"
+    ],
+    [
+      85,
+      51,
+      0,
+      69,
+      0,
+      "AUDIO"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 9,
+      "title": "加载器",
+      "bounding": [
+        1969.4619903239045,
+        1124,
+        528,
+        496
+      ],
+      "color": "#c47b30",
+      "flags": {}
+    },
+    {
+      "id": 10,
+      "title": "图像/潜空间输入",
+      "bounding": [
+        2513.4619903239045,
+        1124,
+        338,
+        476
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 11,
+      "title": "编码器",
+      "bounding": [
+        2867.4619903239045,
+        1124,
+        748.0591175255236,
+        833.7271343362715
+      ],
+      "color": "#4a5fa1",
+      "flags": {}
+    },
+    {
+      "id": 12,
+      "title": "条件",
+      "bounding": [
+        3631.521107849428,
+        1124,
+        338,
+        140
+      ],
+      "color": "#8a3ea1",
+      "flags": {}
+    },
+    {
+      "id": 13,
+      "title": "采样器",
+      "bounding": [
+        3985.521107849428,
+        1124,
+        338.00000000000045,
+        370
+      ],
+      "color": "#a13030",
+      "flags": {}
+    },
+    {
+      "id": 14,
+      "title": "输出/保存",
+      "bounding": [
+        4339.5211078494285,
+        1124,
+        798,
+        478
+      ],
+      "color": "#a8862a",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.5320731221638318,
+      "offset": [
+        -1204.8460481607838,
+        -143.1147450493472
+      ]
+    },
+    "frontendVersion": "1.48.7",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true,
+    "ue_links": [],
+    "links_added_by_ue": []
+  },
+  "version": 0.4
+}

@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #0c0a09;
+  --panel: #1c1917;
+  --line: #44403c;
+  --text: #fafaf9;
+  --muted: #a8a29e;
+  --accent: #f59e0b;
+}
+
+html,
+body {
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "PingFang SC", "Noto Sans SC", ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
+  background-image:
+    radial-gradient(ellipse 80% 50% at 10% -10%, rgba(245, 158, 11, 0.12), transparent),
+    radial-gradient(ellipse 50% 40% at 100% 0%, rgba(68, 64, 60, 0.4), transparent);
+}

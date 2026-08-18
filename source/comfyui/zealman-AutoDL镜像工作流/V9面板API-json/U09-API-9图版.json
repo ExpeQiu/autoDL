@@ -1,0 +1,1258 @@
+{
+  "119": {
+    "inputs": {
+      "vae_name": "minimax_h3_video_vae_fp16.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "加载VAE"
+    }
+  },
+  "120": {
+    "inputs": {
+      "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "加载VAE"
+    }
+  },
+  "121": {
+    "inputs": {
+      "samples": [
+        "125",
+        1
+      ],
+      "vae": [
+        "120",
+        0
+      ]
+    },
+    "class_type": "VAEDecodeAudio",
+    "_meta": {
+      "title": "VAE解码（音频）"
+    }
+  },
+  "122": {
+    "inputs": {
+      "samples": [
+        "125",
+        0
+      ],
+      "vae": [
+        "119",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE解码"
+    }
+  },
+  "123": {
+    "inputs": {
+      "sampler_name": "euler"
+    },
+    "class_type": "KSamplerSelect",
+    "_meta": {
+      "title": "K采样器选择"
+    }
+  },
+  "124": {
+    "inputs": {
+      "scheduler": "beta",
+      "steps": [
+        "206",
+        0
+      ],
+      "denoise": 1,
+      "model": [
+        "295",
+        0
+      ]
+    },
+    "class_type": "BasicScheduler",
+    "_meta": {
+      "title": "基本调度器"
+    }
+  },
+  "125": {
+    "inputs": {
+      "noise": [
+        "129",
+        0
+      ],
+      "guider": [
+        "126",
+        0
+      ],
+      "sampler": [
+        "123",
+        0
+      ],
+      "sigmas": [
+        "124",
+        0
+      ],
+      "latent_image": [
+        "162",
+        0
+      ]
+    },
+    "class_type": "SamplerCustomAdvanced",
+    "_meta": {
+      "title": "自定义采样器（高级）"
+    }
+  },
+  "126": {
+    "inputs": {
+      "model": [
+        "295",
+        0
+      ],
+      "conditioning": [
+        "186",
+        0
+      ]
+    },
+    "class_type": "BasicGuider",
+    "_meta": {
+      "title": "基本引导器"
+    }
+  },
+  "127": {
+    "inputs": {
+      "unet_name": "minimax/minimax_h3_ref2va_int8_convrot.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "UNet加载器"
+    }
+  },
+  "128": {
+    "inputs": {
+      "clip_name": "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+      "type": "minimax",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "加载CLIP"
+    }
+  },
+  "129": {
+    "inputs": {
+      "noise_seed": 1017399907037165
+    },
+    "class_type": "RandomNoise",
+    "_meta": {
+      "title": "随机噪波"
+    }
+  },
+  "131": {
+    "inputs": {
+      "expression": "max(5, round(a * 24)) + (5 - (max(5, round(a * 24)) % 17)) % 17",
+      "values.a": [
+        "132",
+        0
+      ]
+    },
+    "class_type": "ComfyMathExpression",
+    "_meta": {
+      "title": "数学表达式"
+    }
+  },
+  "132": {
+    "inputs": {
+      "value": 12
+    },
+    "class_type": "PrimitiveFloat",
+    "_meta": {
+      "title": "Float (Duration)"
+    }
+  },
+  "137": {
+    "inputs": {
+      "image": "Untitled(3).jpg"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "参考图1"
+    }
+  },
+  "138": {
+    "inputs": {
+      "value": "subject_definitions:\n<Subject 1> 是 <Picture 1> 中的年轻女子，黑色长发，淡蓝色宽袖长袍，银色细发簪。\n<Subject 2> 是 <Picture 2> 中的年轻男子，束发，黑色长袍，深色皮革护腕。\n<Subject 3> 是 <Picture 3> 中的女子，红色长袍，拖曳长飘带。\n<Subject 4> 是 <Picture 4> 中的雪林场景，松枝覆雪，孤树红梅盛开，雪花飘落。\n\nsummary:\n[reference generation] 目标视频跟随 <Subject 1> 与 <Subject 2> 两名同门，穿过 <Subject 4> 的暴风雪，直到看见 <Subject 3> 在红梅树下等候。三个镜头从侧向跟拍中景，切到远景揭示，最后落在 <Subject 1> 开口呼唤的特写。\n\nretention_analysis:\n<Subject 1> (appears in [Shot 1], [Shot 3]): fully_preserved - 黑色长发、淡蓝宽袖长袍与银色发簪全程保留。\n<Subject 2> (appears in [Shot 1]): fully_preserved - 束发、黑色长袍与深色皮革护腕全程保留。\n<Subject 3> (appears in [Shot 2]): fully_preserved - 红色长袍与拖曳长飘带全程保留。\n<Subject 4> (appears in [Shot 1], [Shot 2], [Shot 3]): fully_preserved - 覆雪松林、盛开红梅与飘雪作为各镜头环境全程保留。\n\ndetailed_description:\n目标视频为电影感武侠风格，冷蓝灰光线，大雪纷飞，浅景深。\n[Shot 1] 中景侧向跟拍，<Subject 1> 与 <Subject 2> 在 <Subject 4> 齐膝深雪中前行，两侧覆雪松枝合拢，风卷雪花横穿画面。<Subject 1> 以宽袖挡风；<Subject 2> 落后半步。 <Subject 1> 骤然停步，眼中惊喜与如释重负，直视前方，镜头随其停住。\n[Shot 2] At 00:02.000，切至沿视线方向的远景并缓慢推进。<Subject 4> 孤树红梅之下，<Subject 3> 背对镜头静立，红袍与长飘带是雪地中唯一的饱和色，飘带被风掀起。\n[Shot 3] At 00:03.500，切至 <Subject 1> (S1) 正面特写，淡蓝长袍肩头积雪，眼眶含泪。<Subject 1> (S1) 以年轻女声、压抑而颤抖地开口，<d>[Chinese] 师姐，我们终于找到你了。</d> 她抿唇继续望向前方，风声渐起。\n\noverall_soundscape:\n全程呼啸风声与密集落雪，第一镜中有踩过深雪的闷响脚步声。\n\nnon_diegetic_music:\n克制的二胡独奏慢板，低音弦乐持续铺垫，在最终特写处轻轻推高。"
+    },
+    "class_type": "PrimitiveStringMultiline",
+    "_meta": {
+      "title": "提示词"
+    }
+  },
+  "139": {
+    "inputs": {
+      "image": "Untitled(1).jpg"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "参考图2"
+    }
+  },
+  "146": {
+    "inputs": {
+      "image": "Untitled(4).jpg"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "参考图3"
+    }
+  },
+  "147": {
+    "inputs": {
+      "image": "Untitled(2).jpg"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "参考图4"
+    }
+  },
+  "148": {
+    "inputs": {
+      "image": "Untitled(2).jpg"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "参考图5"
+    }
+  },
+  "149": {
+    "inputs": {
+      "image": "Untitled(2).jpg"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "参考图6"
+    }
+  },
+  "150": {
+    "inputs": {
+      "image": "Untitled(2).jpg"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "参考图7"
+    }
+  },
+  "151": {
+    "inputs": {
+      "image": "Untitled(2).jpg"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "参考图8"
+    }
+  },
+  "162": {
+    "inputs": {
+      "anything": [
+        "186",
+        1
+      ]
+    },
+    "class_type": "easy clearCacheAll",
+    "_meta": {
+      "title": "清除全部缓存"
+    }
+  },
+  "168": {
+    "inputs": {
+      "frame_rate": 24,
+      "loop_count": 0,
+      "filename_prefix": "comfyui",
+      "format": "video/h264-mp4",
+      "pix_fmt": "yuv420p",
+      "crf": 16,
+      "save_metadata": true,
+      "trim_to_audio": false,
+      "pingpong": false,
+      "save_output": true,
+      "images": [
+        "297",
+        0
+      ],
+      "audio": [
+        "121",
+        0
+      ]
+    },
+    "class_type": "VHS_VideoCombine",
+    "_meta": {
+      "title": "Video Combine 🎥🅥🅗🅢"
+    }
+  },
+  "170": {
+    "inputs": {
+      "image": "Untitled(2).jpg"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "参考图9"
+    }
+  },
+  "186": {
+    "inputs": {
+      "prompt": [
+        "138",
+        0
+      ],
+      "width": [
+        "300",
+        1
+      ],
+      "height": [
+        "300",
+        2
+      ],
+      "length": [
+        "131",
+        1
+      ],
+      "ref_image_size": "max",
+      "clip": [
+        "128",
+        0
+      ],
+      "vae": [
+        "119",
+        0
+      ],
+      "audio_vae": [
+        "120",
+        0
+      ],
+      "ref_images.ref_image_0": [
+        "198",
+        0
+      ],
+      "ref_images.ref_image_1": [
+        "234",
+        0
+      ],
+      "ref_images.ref_image_2": [
+        "235",
+        0
+      ],
+      "ref_images.ref_image_3": [
+        "236",
+        0
+      ],
+      "ref_images.ref_image_4": [
+        "237",
+        0
+      ],
+      "ref_images.ref_image_5": [
+        "238",
+        0
+      ],
+      "ref_images.ref_image_6": [
+        "239",
+        0
+      ],
+      "ref_images.ref_image_7": [
+        "240",
+        0
+      ],
+      "ref_images.ref_image_8": [
+        "241",
+        0
+      ]
+    },
+    "class_type": "MiniMaxH3ReferenceToVideo",
+    "_meta": {
+      "title": "MiniMax H3 参考生成视频"
+    }
+  },
+  "198": {
+    "inputs": {
+      "size": [
+        "243",
+        0
+      ],
+      "method": "LANCZOS",
+      "image": [
+        "137",
+        0
+      ]
+    },
+    "class_type": "ResizeShortestToNode",
+    "_meta": {
+      "title": "Resize Shortest To"
+    }
+  },
+  "205": {
+    "inputs": {
+      "lora_name": "minimax/minimax_h3_turbo_v4_step600.safetensors",
+      "strength_model": 0.5,
+      "model": [
+        "127",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderBypassModelOnly",
+    "_meta": {
+      "title": "加载LoRA（旁路，仅模型）（用于调试）"
+    }
+  },
+  "206": {
+    "inputs": {
+      "value": 12
+    },
+    "class_type": "INTConstant",
+    "_meta": {
+      "title": "一采步数"
+    }
+  },
+  "209": {
+    "inputs": {
+      "model": [
+        "205",
+        0
+      ]
+    },
+    "class_type": "MiniMaxH3MemoryEfficientSageAttentionPatch",
+    "_meta": {
+      "title": "MiniMax H3 Mem Eff Sage Attention Patch"
+    }
+  },
+  "211": {
+    "inputs": {
+      "tau": 1.3,
+      "start_percent": 0.2,
+      "end_percent": 0.9,
+      "min_tokens": 4096,
+      "int8_qk": true,
+      "sink_conditioning": "exact_kv_and_rows",
+      "morton": false,
+      "morton_curve": "2d_frame",
+      "int8_pv": true,
+      "verbose": true,
+      "use_tma": true,
+      "dense_blocks": "33-35,39-42,-1",
+      "model": [
+        "209",
+        0
+      ]
+    },
+    "class_type": "SolAttnPatch",
+    "_meta": {
+      "title": "Patch Sol-Attn"
+    }
+  },
+  "213": {
+    "inputs": {
+      "width": [
+        "301",
+        1
+      ],
+      "height": [
+        "301",
+        2
+      ],
+      "upscale_method": "nvidia_rtx_vsr",
+      "keep_proportion": "crop",
+      "pad_color": "0, 0, 0",
+      "crop_position": "center",
+      "divisible_by": 32,
+      "device": "cpu",
+      "image": [
+        "122",
+        0
+      ]
+    },
+    "class_type": "ImageResizeKJv2",
+    "_meta": {
+      "title": "Resize Image v2"
+    },
+    "t": {
+      "title": "（显卡不支持请选lanczos）支持选nvidia_rtx_vsr"
+    }
+  },
+  "215": {
+    "inputs": {
+      "value": 4
+    },
+    "class_type": "INTConstant",
+    "_meta": {
+      "title": "二采步数"
+    }
+  },
+  "216": {
+    "inputs": {
+      "video_latent": [
+        "219",
+        0
+      ],
+      "audio_latent": [
+        "221",
+        0
+      ]
+    },
+    "class_type": "PT_H3ConcatAVLatent",
+    "_meta": {
+      "title": "PT H3 Concat AV Latent"
+    }
+  },
+  "219": {
+    "inputs": {
+      "pixels": [
+        "286",
+        0
+      ],
+      "vae": [
+        "119",
+        0
+      ]
+    },
+    "class_type": "VAEEncode",
+    "_meta": {
+      "title": "VAE编码"
+    }
+  },
+  "221": {
+    "inputs": {
+      "audio": [
+        "121",
+        0
+      ],
+      "vae": [
+        "120",
+        0
+      ]
+    },
+    "class_type": "VAEEncodeAudio",
+    "_meta": {
+      "title": "VAE编码（音频）"
+    }
+  },
+  "222": {
+    "inputs": {
+      "noise": [
+        "129",
+        0
+      ],
+      "guider": [
+        "232",
+        0
+      ],
+      "sampler": [
+        "224",
+        0
+      ],
+      "sigmas": [
+        "223",
+        0
+      ],
+      "latent_image": [
+        "216",
+        0
+      ]
+    },
+    "class_type": "SamplerCustomAdvanced",
+    "_meta": {
+      "title": "自定义采样器（高级）"
+    }
+  },
+  "223": {
+    "inputs": {
+      "scheduler": "beta",
+      "steps": [
+        "215",
+        0
+      ],
+      "denoise": 0.2,
+      "model": [
+        "296",
+        0
+      ]
+    },
+    "class_type": "BasicScheduler",
+    "_meta": {
+      "title": "基本调度器"
+    }
+  },
+  "224": {
+    "inputs": {
+      "sampler_name": "res_multistep"
+    },
+    "class_type": "KSamplerSelect",
+    "_meta": {
+      "title": "K采样器选择"
+    }
+  },
+  "225": {
+    "inputs": {
+      "samples": [
+        "222",
+        0
+      ],
+      "vae": [
+        "119",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE解码"
+    }
+  },
+  "230": {
+    "inputs": {
+      "model": [
+        "127",
+        0
+      ]
+    },
+    "class_type": "MiniMaxH3MemoryEfficientSageAttentionPatch",
+    "_meta": {
+      "title": "MiniMax H3 Mem Eff Sage Attention Patch"
+    }
+  },
+  "232": {
+    "inputs": {
+      "model": [
+        "296",
+        0
+      ],
+      "conditioning": [
+        "186",
+        0
+      ]
+    },
+    "class_type": "BasicGuider",
+    "_meta": {
+      "title": "基本引导器"
+    }
+  },
+  "233": {
+    "inputs": {
+      "tau": 1.3,
+      "start_percent": 0.2,
+      "end_percent": 0.9,
+      "min_tokens": 4096,
+      "int8_qk": true,
+      "sink_conditioning": "exact_kv_and_rows",
+      "morton": false,
+      "morton_curve": "2d_frame",
+      "int8_pv": true,
+      "verbose": true,
+      "use_tma": true,
+      "dense_blocks": "33-35,39-42,-1",
+      "model": [
+        "230",
+        0
+      ]
+    },
+    "class_type": "SolAttnPatch",
+    "_meta": {
+      "title": "Patch Sol-Attn"
+    }
+  },
+  "234": {
+    "inputs": {
+      "size": [
+        "243",
+        0
+      ],
+      "method": "LANCZOS",
+      "image": [
+        "139",
+        0
+      ]
+    },
+    "class_type": "ResizeShortestToNode",
+    "_meta": {
+      "title": "Resize Shortest To"
+    }
+  },
+  "235": {
+    "inputs": {
+      "size": [
+        "243",
+        0
+      ],
+      "method": "LANCZOS",
+      "image": [
+        "146",
+        0
+      ]
+    },
+    "class_type": "ResizeShortestToNode",
+    "_meta": {
+      "title": "Resize Shortest To"
+    }
+  },
+  "236": {
+    "inputs": {
+      "size": [
+        "243",
+        0
+      ],
+      "method": "LANCZOS",
+      "image": [
+        "147",
+        0
+      ]
+    },
+    "class_type": "ResizeShortestToNode",
+    "_meta": {
+      "title": "Resize Shortest To"
+    }
+  },
+  "237": {
+    "inputs": {
+      "size": [
+        "243",
+        0
+      ],
+      "method": "LANCZOS",
+      "image": [
+        "148",
+        0
+      ]
+    },
+    "class_type": "ResizeShortestToNode",
+    "_meta": {
+      "title": "Resize Shortest To"
+    }
+  },
+  "238": {
+    "inputs": {
+      "size": [
+        "243",
+        0
+      ],
+      "method": "LANCZOS",
+      "image": [
+        "149",
+        0
+      ]
+    },
+    "class_type": "ResizeShortestToNode",
+    "_meta": {
+      "title": "Resize Shortest To"
+    }
+  },
+  "239": {
+    "inputs": {
+      "size": [
+        "243",
+        0
+      ],
+      "method": "LANCZOS",
+      "image": [
+        "150",
+        0
+      ]
+    },
+    "class_type": "ResizeShortestToNode",
+    "_meta": {
+      "title": "Resize Shortest To"
+    }
+  },
+  "240": {
+    "inputs": {
+      "size": [
+        "300",
+        1
+      ],
+      "method": "LANCZOS",
+      "image": [
+        "151",
+        0
+      ]
+    },
+    "class_type": "ResizeShortestToNode",
+    "_meta": {
+      "title": "Resize Shortest To"
+    }
+  },
+  "241": {
+    "inputs": {
+      "size": [
+        "300",
+        1
+      ],
+      "method": "LANCZOS",
+      "image": [
+        "170",
+        0
+      ]
+    },
+    "class_type": "ResizeShortestToNode",
+    "_meta": {
+      "title": "Resize Shortest To"
+    }
+  },
+  "243": {
+    "inputs": {
+      "value": 640
+    },
+    "class_type": "INTConstant",
+    "_meta": {
+      "title": "参考素材短边分辨率"
+    }
+  },
+  "286": {
+    "inputs": {
+      "anything": [
+        "213",
+        0
+      ]
+    },
+    "class_type": "easy clearCacheAll",
+    "_meta": {
+      "title": "清除全部缓存"
+    }
+  },
+  "295": {
+    "inputs": {
+      "max_resolution": 1024,
+      "jpeg_quality": 100,
+      "suppress_default_preview": true,
+      "preview_frames": 50,
+      "preview_fps": 10,
+      "tiny_vae": "taeh3.safetensors",
+      "model": [
+        "211",
+        0
+      ]
+    },
+    "class_type": "ModelPreviewOverrideKJ",
+    "_meta": {
+      "title": "Model Preview Override"
+    }
+  },
+  "296": {
+    "inputs": {
+      "max_resolution": 1024,
+      "jpeg_quality": 100,
+      "suppress_default_preview": true,
+      "preview_frames": 50,
+      "preview_fps": 10,
+      "tiny_vae": "taeh3.safetensors",
+      "model": [
+        "302",
+        0
+      ]
+    },
+    "class_type": "ModelPreviewOverrideKJ",
+    "_meta": {
+      "title": "Model Preview Override"
+    }
+  },
+  "297": {
+    "inputs": {
+      "clean_file_cache": true,
+      "clean_processes": true,
+      "clean_dlls": true,
+      "retry_times": 3,
+      "anything": [
+        "298",
+        0
+      ]
+    },
+    "class_type": "RAMCleanup",
+    "_meta": {
+      "title": "🎈RAM-Cleanup"
+    }
+  },
+  "298": {
+    "inputs": {
+      "offload_model": true,
+      "offload_cache": true,
+      "anything": [
+        "225",
+        0
+      ]
+    },
+    "class_type": "VRAMCleanup",
+    "_meta": {
+      "title": "🎈VRAM-Cleanup"
+    }
+  },
+  "300": {
+    "inputs": {
+      "预设分辨率": "自定义",
+      "横竖对调": false,
+      "批量大小": 1,
+      "自定义宽": 864,
+      "自定义高": 480,
+      "缩放倍数": "32"
+    },
+    "class_type": "WJILatentPreset",
+    "_meta": {
+      "title": "📐 Latent预设 (Empty Latent Preset)"
+    },
+    "t": {
+      "title": "1采尺寸"
+    }
+  },
+  "301": {
+    "inputs": {
+      "预设分辨率": "自定义",
+      "横竖对调": false,
+      "批量大小": 1,
+      "自定义宽": 1152,
+      "自定义高": 640,
+      "缩放倍数": "32"
+    },
+    "class_type": "WJILatentPreset",
+    "_meta": {
+      "title": "📐 Latent预设 (Empty Latent Preset)"
+    },
+    "t": {
+      "title": "2采尺寸"
+    }
+  },
+  "302": {
+    "inputs": {
+      "reserved": 0.4,
+      "mode": "auto",
+      "seed": 206034128981058,
+      "auto_max_reserved": 0,
+      "clean_gpu_before": true,
+      "anything": [
+        "233",
+        0
+      ]
+    },
+    "class_type": "ReservedVRAMSetter",
+    "_meta": {
+      "title": "Set Reserved VRAM(GB) ⚙️"
+    }
+  },
+  "_api_config": {
+    "customLabels": {
+      "124:denoise": "denoise (节点 124)",
+      "127:weight_dtype": "weight_dtype (节点 127)",
+      "128:type": "type (节点 128)",
+      "128:device": "device (节点 128)",
+      "129:noise_seed": "noise_seed (节点 129)",
+      "131:expression": "expression (节点 131)",
+      "132:value": "value (节点 132)",
+      "137:image": "上传图片 (节点 137)",
+      "138:value": "value (节点 138)",
+      "139:image": "上传图片 (节点 139)",
+      "146:image": "上传图片 (节点 146)",
+      "147:image": "上传图片 (节点 147)",
+      "148:image": "上传图片 (节点 148)",
+      "149:image": "上传图片 (节点 149)",
+      "150:image": "上传图片 (节点 150)",
+      "151:image": "上传图片 (节点 151)",
+      "168:filename_prefix": "文件名前缀",
+      "168:frame_rate": "frame_rate (节点 168)",
+      "168:loop_count": "loop_count (节点 168)",
+      "168:format": "format (节点 168)",
+      "168:pix_fmt": "pix_fmt (节点 168)",
+      "168:crf": "crf (节点 168)",
+      "168:save_metadata": "save_metadata (节点 168)",
+      "168:trim_to_audio": "trim_to_audio (节点 168)",
+      "168:pingpong": "pingpong (节点 168)",
+      "168:save_output": "save_output (节点 168)",
+      "170:image": "上传图片 (节点 170)",
+      "186:ref_image_size": "ref_image_size (节点 186)",
+      "198:method": "method (节点 198)",
+      "205:strength_model": "strength_model (节点 205)",
+      "206:value": "value (节点 206)",
+      "211:tau": "tau (节点 211)",
+      "211:start_percent": "start_percent (节点 211)",
+      "211:end_percent": "end_percent (节点 211)",
+      "211:min_tokens": "min_tokens (节点 211)",
+      "211:int8_qk": "int8_qk (节点 211)",
+      "211:sink_conditioning": "sink_conditioning (节点 211)",
+      "211:morton": "morton (节点 211)",
+      "211:morton_curve": "morton_curve (节点 211)",
+      "211:int8_pv": "int8_pv (节点 211)",
+      "211:verbose": "verbose (节点 211)",
+      "211:use_tma": "use_tma (节点 211)",
+      "211:dense_blocks": "dense_blocks (节点 211)",
+      "213:upscale_method": "（显卡不支持请选lanczos）支持选nvidia_rtx_vsr (upscale_method)",
+      "213:keep_proportion": "（显卡不支持请选lanczos）支持选nvidia_rtx_vsr (keep_proportion)",
+      "213:pad_color": "（显卡不支持请选lanczos）支持选nvidia_rtx_vsr (pad_color)",
+      "213:crop_position": "（显卡不支持请选lanczos）支持选nvidia_rtx_vsr (crop_position)",
+      "213:divisible_by": "（显卡不支持请选lanczos）支持选nvidia_rtx_vsr (divisible_by)",
+      "213:device": "（显卡不支持请选lanczos）支持选nvidia_rtx_vsr (device)",
+      "215:value": "value (节点 215)",
+      "223:denoise": "denoise (节点 223)",
+      "233:tau": "tau (节点 233)",
+      "233:start_percent": "start_percent (节点 233)",
+      "233:end_percent": "end_percent (节点 233)",
+      "233:min_tokens": "min_tokens (节点 233)",
+      "233:int8_qk": "int8_qk (节点 233)",
+      "233:sink_conditioning": "sink_conditioning (节点 233)",
+      "233:morton": "morton (节点 233)",
+      "233:morton_curve": "morton_curve (节点 233)",
+      "233:int8_pv": "int8_pv (节点 233)",
+      "233:verbose": "verbose (节点 233)",
+      "233:use_tma": "use_tma (节点 233)",
+      "233:dense_blocks": "dense_blocks (节点 233)",
+      "234:method": "method (节点 234)",
+      "235:method": "method (节点 235)",
+      "236:method": "method (节点 236)",
+      "237:method": "method (节点 237)",
+      "238:method": "method (节点 238)",
+      "239:method": "method (节点 239)",
+      "240:method": "method (节点 240)",
+      "241:method": "method (节点 241)",
+      "243:value": "value (节点 243)",
+      "295:max_resolution": "max_resolution (节点 295)",
+      "295:jpeg_quality": "jpeg_quality (节点 295)",
+      "295:suppress_default_preview": "suppress_default_preview (节点 295)",
+      "295:preview_frames": "preview_frames (节点 295)",
+      "295:preview_fps": "preview_fps (节点 295)",
+      "296:max_resolution": "max_resolution (节点 296)",
+      "296:jpeg_quality": "jpeg_quality (节点 296)",
+      "296:suppress_default_preview": "suppress_default_preview (节点 296)",
+      "296:preview_frames": "preview_frames (节点 296)",
+      "296:preview_fps": "preview_fps (节点 296)",
+      "297:clean_file_cache": "clean_file_cache (节点 297)",
+      "297:clean_processes": "clean_processes (节点 297)",
+      "297:clean_dlls": "clean_dlls (节点 297)",
+      "297:retry_times": "retry_times (节点 297)",
+      "298:offload_model": "offload_model (节点 298)",
+      "298:offload_cache": "offload_cache (节点 298)",
+      "300:预设分辨率": "1采尺寸 (预设分辨率)",
+      "300:横竖对调": "1采尺寸 (横竖对调)",
+      "300:批量大小": "1采尺寸 (批量大小)",
+      "300:自定义宽": "1采尺寸 (自定义宽)",
+      "300:自定义高": "1采尺寸 (自定义高)",
+      "300:缩放倍数": "1采尺寸 (缩放倍数)",
+      "301:预设分辨率": "2采尺寸 (预设分辨率)",
+      "301:横竖对调": "2采尺寸 (横竖对调)",
+      "301:批量大小": "2采尺寸 (批量大小)",
+      "301:自定义宽": "2采尺寸 (自定义宽)",
+      "301:自定义高": "2采尺寸 (自定义高)",
+      "301:缩放倍数": "2采尺寸 (缩放倍数)",
+      "302:seed": "随机种子 (节点 302)",
+      "302:reserved": "reserved (节点 302)",
+      "302:mode": "mode (节点 302)",
+      "302:auto_max_reserved": "auto_max_reserved (节点 302)",
+      "302:clean_gpu_before": "clean_gpu_before (节点 302)"
+    },
+    "enabledParams": {
+      "124:denoise": false,
+      "127:weight_dtype": false,
+      "128:type": false,
+      "128:device": false,
+      "129:noise_seed": true,
+      "131:expression": false,
+      "132:value": true,
+      "137:image": true,
+      "138:value": true,
+      "139:image": true,
+      "146:image": true,
+      "147:image": true,
+      "148:image": true,
+      "149:image": true,
+      "150:image": true,
+      "151:image": true,
+      "168:filename_prefix": false,
+      "168:frame_rate": false,
+      "168:loop_count": false,
+      "168:format": false,
+      "168:pix_fmt": false,
+      "168:crf": false,
+      "168:save_metadata": false,
+      "168:trim_to_audio": false,
+      "168:pingpong": false,
+      "168:save_output": false,
+      "170:image": true,
+      "186:ref_image_size": false,
+      "198:method": false,
+      "205:strength_model": false,
+      "206:value": false,
+      "211:tau": false,
+      "211:start_percent": false,
+      "211:end_percent": false,
+      "211:min_tokens": false,
+      "211:int8_qk": false,
+      "211:sink_conditioning": false,
+      "211:morton": false,
+      "211:morton_curve": false,
+      "211:int8_pv": false,
+      "211:verbose": false,
+      "211:use_tma": false,
+      "211:dense_blocks": false,
+      "213:upscale_method": true,
+      "213:keep_proportion": false,
+      "213:pad_color": false,
+      "213:crop_position": false,
+      "213:divisible_by": false,
+      "213:device": false,
+      "215:value": false,
+      "223:denoise": false,
+      "233:tau": false,
+      "233:start_percent": false,
+      "233:end_percent": false,
+      "233:min_tokens": false,
+      "233:int8_qk": false,
+      "233:sink_conditioning": false,
+      "233:morton": false,
+      "233:morton_curve": false,
+      "233:int8_pv": false,
+      "233:verbose": false,
+      "233:use_tma": false,
+      "233:dense_blocks": false,
+      "234:method": false,
+      "235:method": false,
+      "236:method": false,
+      "237:method": false,
+      "238:method": false,
+      "239:method": false,
+      "240:method": false,
+      "241:method": false,
+      "243:value": false,
+      "295:max_resolution": false,
+      "295:jpeg_quality": false,
+      "295:suppress_default_preview": false,
+      "295:preview_frames": false,
+      "295:preview_fps": false,
+      "296:max_resolution": false,
+      "296:jpeg_quality": false,
+      "296:suppress_default_preview": false,
+      "296:preview_frames": false,
+      "296:preview_fps": false,
+      "297:clean_file_cache": false,
+      "297:clean_processes": false,
+      "297:clean_dlls": false,
+      "297:retry_times": false,
+      "298:offload_model": false,
+      "298:offload_cache": false,
+      "300:预设分辨率": false,
+      "300:横竖对调": false,
+      "300:批量大小": false,
+      "300:自定义宽": false,
+      "300:自定义高": false,
+      "300:缩放倍数": false,
+      "301:预设分辨率": false,
+      "301:横竖对调": false,
+      "301:批量大小": false,
+      "301:自定义宽": true,
+      "301:自定义高": true,
+      "301:缩放倍数": false,
+      "302:seed": false,
+      "302:reserved": false,
+      "302:mode": false,
+      "302:auto_max_reserved": false,
+      "302:clean_gpu_before": false
+    },
+    "formValues": {
+      "124:denoise": 1,
+      "127:weight_dtype": "default",
+      "128:type": "minimax",
+      "128:device": "default",
+      "129:noise_seed": 1017399907037165,
+      "131:expression": "max(5, round(a * 24)) + (5 - (max(5, round(a * 24)) % 17)) % 17",
+      "132:value": 12,
+      "137:image": null,
+      "138:value": "subject_definitions:\n<Subject 1> 是 <Picture 1> 中的年轻女子，黑色长发，淡蓝色宽袖长袍，银色细发簪。\n<Subject 2> 是 <Picture 2> 中的年轻男子，束发，黑色长袍，深色皮革护腕。\n<Subject 3> 是 <Picture 3> 中的女子，红色长袍，拖曳长飘带。\n<Subject 4> 是 <Picture 4> 中的雪林场景，松枝覆雪，孤树红梅盛开，雪花飘落。\n\nsummary:\n[reference generation] 目标视频跟随 <Subject 1> 与 <Subject 2> 两名同门，穿过 <Subject 4> 的暴风雪，直到看见 <Subject 3> 在红梅树下等候。三个镜头从侧向跟拍中景，切到远景揭示，最后落在 <Subject 1> 开口呼唤的特写。\n\nretention_analysis:\n<Subject 1> (appears in [Shot 1], [Shot 3]): fully_preserved - 黑色长发、淡蓝宽袖长袍与银色发簪全程保留。\n<Subject 2> (appears in [Shot 1]): fully_preserved - 束发、黑色长袍与深色皮革护腕全程保留。\n<Subject 3> (appears in [Shot 2]): fully_preserved - 红色长袍与拖曳长飘带全程保留。\n<Subject 4> (appears in [Shot 1], [Shot 2], [Shot 3]): fully_preserved - 覆雪松林、盛开红梅与飘雪作为各镜头环境全程保留。\n\ndetailed_description:\n目标视频为电影感武侠风格，冷蓝灰光线，大雪纷飞，浅景深。\n[Shot 1] 中景侧向跟拍，<Subject 1> 与 <Subject 2> 在 <Subject 4> 齐膝深雪中前行，两侧覆雪松枝合拢，风卷雪花横穿画面。<Subject 1> 以宽袖挡风；<Subject 2> 落后半步。 <Subject 1> 骤然停步，眼中惊喜与如释重负，直视前方，镜头随其停住。\n[Shot 2] At 00:02.000，切至沿视线方向的远景并缓慢推进。<Subject 4> 孤树红梅之下，<Subject 3> 背对镜头静立，红袍与长飘带是雪地中唯一的饱和色，飘带被风掀起。\n[Shot 3] At 00:03.500，切至 <Subject 1> (S1) 正面特写，淡蓝长袍肩头积雪，眼眶含泪。<Subject 1> (S1) 以年轻女声、压抑而颤抖地开口，<d>[Chinese] 师姐，我们终于找到你了。</d> 她抿唇继续望向前方，风声渐起。\n\noverall_soundscape:\n全程呼啸风声与密集落雪，第一镜中有踩过深雪的闷响脚步声。\n\nnon_diegetic_music:\n克制的二胡独奏慢板，低音弦乐持续铺垫，在最终特写处轻轻推高。",
+      "139:image": null,
+      "146:image": null,
+      "147:image": null,
+      "148:image": null,
+      "149:image": null,
+      "150:image": null,
+      "151:image": null,
+      "168:filename_prefix": "comfyui",
+      "168:frame_rate": 24,
+      "168:loop_count": 0,
+      "168:format": "video/h264-mp4",
+      "168:pix_fmt": "yuv420p",
+      "168:crf": 16,
+      "168:save_metadata": true,
+      "168:trim_to_audio": false,
+      "168:pingpong": false,
+      "168:save_output": true,
+      "170:image": null,
+      "186:ref_image_size": "max",
+      "198:method": "LANCZOS",
+      "205:strength_model": 0.5,
+      "206:value": 12,
+      "211:tau": 1.3,
+      "211:start_percent": 0.2,
+      "211:end_percent": 0.9,
+      "211:min_tokens": 4096,
+      "211:int8_qk": true,
+      "211:sink_conditioning": "exact_kv_and_rows",
+      "211:morton": false,
+      "211:morton_curve": "2d_frame",
+      "211:int8_pv": true,
+      "211:verbose": true,
+      "211:use_tma": true,
+      "211:dense_blocks": "33-35,39-42,-1",
+      "213:upscale_method": "nvidia_rtx_vsr",
+      "213:keep_proportion": "crop",
+      "213:pad_color": "0, 0, 0",
+      "213:crop_position": "center",
+      "213:divisible_by": 32,
+      "213:device": "cpu",
+      "215:value": 4,
+      "223:denoise": 0.2,
+      "233:tau": 1.3,
+      "233:start_percent": 0.2,
+      "233:end_percent": 0.9,
+      "233:min_tokens": 4096,
+      "233:int8_qk": true,
+      "233:sink_conditioning": "exact_kv_and_rows",
+      "233:morton": false,
+      "233:morton_curve": "2d_frame",
+      "233:int8_pv": true,
+      "233:verbose": true,
+      "233:use_tma": true,
+      "233:dense_blocks": "33-35,39-42,-1",
+      "234:method": "LANCZOS",
+      "235:method": "LANCZOS",
+      "236:method": "LANCZOS",
+      "237:method": "LANCZOS",
+      "238:method": "LANCZOS",
+      "239:method": "LANCZOS",
+      "240:method": "LANCZOS",
+      "241:method": "LANCZOS",
+      "243:value": 640,
+      "295:max_resolution": 1024,
+      "295:jpeg_quality": 100,
+      "295:suppress_default_preview": true,
+      "295:preview_frames": 50,
+      "295:preview_fps": 10,
+      "296:max_resolution": 1024,
+      "296:jpeg_quality": 100,
+      "296:suppress_default_preview": true,
+      "296:preview_frames": 50,
+      "296:preview_fps": 10,
+      "297:clean_file_cache": true,
+      "297:clean_processes": true,
+      "297:clean_dlls": true,
+      "297:retry_times": 3,
+      "298:offload_model": true,
+      "298:offload_cache": true,
+      "300:预设分辨率": "自定义",
+      "300:横竖对调": false,
+      "300:批量大小": 1,
+      "300:自定义宽": 864,
+      "300:自定义高": 480,
+      "300:缩放倍数": "32",
+      "301:预设分辨率": "自定义",
+      "301:横竖对调": false,
+      "301:批量大小": 1,
+      "301:自定义宽": 1152,
+      "301:自定义高": 640,
+      "301:缩放倍数": "32",
+      "302:seed": 206034128981058,
+      "302:reserved": 0.4,
+      "302:mode": "auto",
+      "302:auto_max_reserved": 0,
+      "302:clean_gpu_before": true
+    }
+  }
+}

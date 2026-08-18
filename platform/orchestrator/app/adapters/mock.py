@@ -1,0 +1,49 @@
+from __future__ import annotations
+
+import hashlib
+import html
+from pathlib import Path
+
+from ..config import settings
+from ..models import Job, JobCreate, utcnow
+
+
+def _write_artifact(job: Job, body: str, suffix: str) -> str:
+    settings.artifacts_dir.mkdir(parents=True, exist_ok=True)
+    path = settings.artifacts_dir / f"{job.id}{suffix}"
+    path.write_text(body, encoding="utf-8")
+    return str(path)
+
+
+def run_mock_job(job: Job, req: JobCreate) -> Job:
+    digest = hashlib.sha1(req.prompt.encode("utf-8")).hexdigest()[:10]
+    now = utcnow()
+    job.status = "running"
+    job.updated_at = now
+
+    if req.modality == "text":
+        body = f"[mock-text] {req.prompt}\nrun_id={job.run_id} job_id={job.id}"
+        uri = _write_artifact(job, body, ".txt")
+    elif req.modality == "image":
+        label = (req.prompt[:42] + "…") if len(req.prompt) > 42 else req.prompt
+        label = html.escape(label)
+        svg = (
+            "<svg xmlns='http://www.w3.org/2000/svg' width='768' height='512'>"
+            "<defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>"
+            "<stop offset='0%' stop-color='#1c1917'/><stop offset='100%' stop-color='#431407'/>"
+            "</linearGradient></defs>"
+            "<rect width='100%' height='100%' fill='url(#g)'/>"
+            "<text x='40' y='230' fill='#fdba74' font-size='22' font-family='sans-serif'>MOCK IMAGE</text>"
+            f"<text x='40' y='270' fill='#ffedd5' font-size='18' font-family='sans-serif'>{label}</text>"
+            f"<text x='40' y='460' fill='#a8a29e' font-size='13' font-family='sans-serif'>{digest}</text>"
+            "</svg>"
+        )
+        uri = _write_artifact(job, svg, ".svg")
+    else:
+        body = f"[mock-video] {req.prompt}\ndigest={digest}"
+        uri = _write_artifact(job, body, ".mp4.txt")
+
+    job.status = "succeeded"
+    job.output_uri = uri
+    job.updated_at = utcnow()
+    return job
