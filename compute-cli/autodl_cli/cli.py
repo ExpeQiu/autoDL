@@ -23,6 +23,7 @@ from autodl_cli.config import (
 )
 from autodl_cli.envelope import emit, make_envelope
 from autodl_cli.store import create_demo_job, get_job, list_jobs
+from autodl_cli.catalog import demo_items
 from autodl_cli.utils.errors import EXIT_AUTH, EXIT_COMPUTE_FAIL, EXIT_ERROR, EXIT_NOT_READY, EXIT_OK
 from autodl_cli.utils.logger import setup_logger
 from autodl_cli import orch
@@ -719,6 +720,38 @@ def job_file(ctx: click.Context, job_id: str, output: str | None) -> None:
             run_id=job_row["run_id"],
             job_id=job_id,
         ),
+        EXIT_OK,
+    )
+
+
+@cli.group(cls=IoGroup)
+def service() -> None:
+    """对外暴露的生成服务目录"""
+
+
+@service.command("list")
+@click.option("--exposed", is_flag=True, help="只列出已对外暴露")
+@click.option("--modality", type=click.Choice(_MODALITY), default=None)
+@click.pass_context
+def service_list(ctx: click.Context, exposed: bool, modality: str | None) -> None:
+    """列出文本 / 图片 / 视频服务。"""
+    if _live(ctx):
+        try:
+            items = orch.list_services(exposed=True if exposed else None, modality=modality)
+        except orch.OrchError as exc:
+            _fail_orch(ctx, "service.list", exc)
+            return
+        source = "live"
+    else:
+        items = demo_items(exposed_only=exposed, modality=modality)
+        source = "demo"
+    log.info(
+        "service_list",
+        extra={"cmd": "service.list", "status": "ok", "modality": modality or "all"},
+    )
+    _done(
+        ctx,
+        make_envelope(module="service.list", data_source=source, ok=True, items=items),
         EXIT_OK,
     )
 

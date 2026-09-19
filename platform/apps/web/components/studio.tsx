@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ImageIcon, Loader2, Sparkles, Trash2, Type, Video, X } from "lucide-react";
 import { api, artifactUrl, type ComputeHealth, type Job, type JobStats, type Modality } from "@/lib/api";
 import { Button } from "@/components/ui/button";
+import { SiteNav } from "@/components/site-nav";
 import { cn } from "@/lib/utils";
 
 const PRESETS: Record<Modality, { workflow: string; prompt: string; label: string }> = {
@@ -174,19 +175,22 @@ export function Studio() {
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">生成测试平台</h1>
           <p className="mt-1 text-sm text-stone-400">文本接 llama.cpp · 图/视频接 ComfyUI</p>
         </div>
-        <div className="flex flex-wrap gap-2 text-xs">
-          <Pill ok={orchOk}>{orchOk ? "编排在线" : "编排离线"}</Pill>
-          <Pill ok={compute?.llm?.ok && compute?.llm?.provider === "llamacpp"}>{llmLabel}</Pill>
-          <Pill ok={compute?.comfyui?.ok}>{computeLabel}</Pill>
-          <Pill ok={mockImage} warn>
-            {mockImage ? "图 Mock" : "图真算力"}
-          </Pill>
-          <Pill ok={mock} warn>
-            {mock ? "视频 Mock" : "视频真算力"}
-          </Pill>
-          <Pill ok={mockText} warn>
-            {mockText ? "文 Mock" : "文真模型"}
-          </Pill>
+        <div className="flex flex-col items-end gap-2">
+          <SiteNav current="studio" />
+          <a href="/services" className="flex flex-wrap justify-end gap-2 text-xs" title="打开服务配置">
+            <Pill ok={orchOk}>{orchOk ? "编排在线" : "编排离线"}</Pill>
+            <Pill ok={compute?.llm?.ok && compute?.llm?.provider === "llamacpp"}>{llmLabel}</Pill>
+            <Pill ok={compute?.comfyui?.ok}>{computeLabel}</Pill>
+            <Pill ok={mockImage} warn>
+              {mockImage ? "图 Mock" : "图真算力"}
+            </Pill>
+            <Pill ok={mock} warn>
+              {mock ? "视频 Mock" : "视频真算力"}
+            </Pill>
+            <Pill ok={mockText} warn>
+              {mockText ? "文 Mock" : "文真模型"}
+            </Pill>
+          </a>
         </div>
       </header>
 

@@ -51,6 +51,67 @@ export type ComputeHealth = {
   llm?: { ok?: boolean; provider?: string; reason?: string; model?: string; models?: string[] };
 };
 
+export type ServiceModality = Modality;
+export type ServiceProvider = "mock" | "comfyui" | "llm";
+
+export type AccessProfile = "local" | "autodl";
+
+export type ModalityLane = {
+  enabled: boolean;
+  mock: boolean;
+  endpoint: string;
+  model: string;
+  tunnel_local: number;
+  tunnel_remote: number;
+};
+
+export type AccessConfig = {
+  ok?: boolean;
+  profile: AccessProfile;
+  mock_text: boolean;
+  mock_image: boolean;
+  mock_video: boolean;
+  comfyui_endpoint: string;
+  llm_base_url: string;
+  llm_model: string;
+  local_comfyui_endpoint: string;
+  local_llm_base_url: string;
+  local_llm_model: string;
+  autodl_comfyui_endpoint: string;
+  autodl_llm_base_url: string;
+  autodl_llm_model: string;
+  autodl_ssh_host: string;
+  autodl_ssh_port: number;
+  autodl_ssh_user: string;
+  autodl_ssh_auth: "password" | "key";
+  autodl_ssh_key_path: string;
+  autodl_ssh_password_set?: boolean;
+  autodl_ssh_password?: string;
+  local_text: ModalityLane;
+  local_image: ModalityLane;
+  local_video: ModalityLane;
+  autodl_text: ModalityLane;
+  autodl_image: ModalityLane;
+  autodl_video: ModalityLane;
+  orch_host?: string;
+  orch_port?: number;
+};
+
+export type ExposedService = {
+  id: string;
+  modality: ServiceModality;
+  label: string;
+  provider: ServiceProvider;
+  workflow_id: string;
+  exposed: boolean;
+  description: string;
+  invoke?: {
+    group: string;
+    action: string;
+    args: { modality: ServiceModality; workflow: string };
+  };
+};
+
 const BASE = "/orch";
 
 function jobQuery(modality?: Modality | "all") {
@@ -97,6 +158,37 @@ export const api = {
       port: number;
     }>(fetch(`${BASE}/health`)),
   compute: () => parse<ComputeHealth>(fetch(`${BASE}/v1/compute/health`)),
+  services: () => parse<{ ok: boolean; items: ExposedService[] }>(fetch(`${BASE}/v1/services`)),
+  saveServices: (items: ExposedService[]) =>
+    parse<{ ok: boolean; items: ExposedService[] }>(
+      fetch(`${BASE}/v1/services`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items }),
+      }),
+    ),
+  patchService: (id: string, body: Partial<Pick<ExposedService, "exposed" | "label" | "description">>) =>
+    parse<{ ok: boolean; item: ExposedService; items: ExposedService[] }>(
+      fetch(`${BASE}/v1/services/${encodeURIComponent(id)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      }),
+    ),
+  access: () => parse<AccessConfig>(fetch(`${BASE}/v1/access`)),
+  saveAccess: (
+    body: Omit<
+      AccessConfig,
+      "ok" | "orch_host" | "orch_port" | "comfyui_endpoint" | "llm_base_url" | "llm_model" | "autodl_ssh_password_set"
+    >,
+  ) =>
+    parse<AccessConfig>(
+      fetch(`${BASE}/v1/access`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      }),
+    ),
   jobs: (modality?: Modality | "all") => {
     const q = jobQuery(modality);
     return parse<{ items: Job[]; total: number }>(fetch(`${BASE}/v1/jobs?${q}`));

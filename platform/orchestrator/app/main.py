@@ -3,9 +3,10 @@ from __future__ import annotations
 import json
 import uuid
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Query
+from pydantic import ValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse
 
@@ -14,6 +15,8 @@ from .adapters.llm import check_llm_health, generate_text
 from .adapters.mock import run_mock_job
 from .config import settings, setup_logging
 from .models import Job, JobCreate, ScoreUpdate, utcnow
+from .services_catalog import ServicePatch, ServicePut, hydrate_services, load_services, patch_service, public_items, save_services
+from .access_config import ModalityLane, active_lane, hydrate_access, load_access, public_access, save_access
 
 log = setup_logging()
 JOBS: dict[str, Job] = {}
@@ -131,12 +134,77 @@ async def llm_health() -> dict:
     return await check_llm_health()
 
 
-def _pick_provider(req: JobCreate) -> Literal["mock", "comfyui", "llm"]:
+@app.get("/v1/access")
+def get_access() -> dict:
+    cfg = load_access()
+    log.info("access_get", extra={"run_id": "access", "status": "ok", "service_id": "access"})
+    return public_access(cfg)
+
+
+@app.put("/v1/access")
+def put_access(req: dict[str, Any]) -> dict:
+    try:
+        saved = save_access(hydrate_access(req, env=load_access()))
+    except ValidationError as exc:
+        raise HTTPException(status_code=422, detail=exc.errors()) from exc
+    log.info(
+        "access_saved",
+        extra={"run_id": "access", "status": saved.profile, "service_id": saved.profile},
+    )
+    return public_access(saved)
+
+
+@app.get("/v1/services")
+def list_services(exposed: bool | None = Query(default=None)) -> dict:
+    items = load_services()
+    log.info(
+        "services_list",
+        extra={"run_id": "svc", "status": "ok", "service_id": "catalog"},
+    )
+    return {"ok": True, "items": public_items(items, exposed_only=exposed is True)}
+
+
+@app.put("/v1/services")
+def replace_services(req: ServicePut) -> dict:
+    try:
+        merged = hydrate_services({"items": [item.model_dump() for item in req.items]})
+        saved = save_services(merged)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    log.info(
+        "services_saved",
+        extra={"run_id": "svc", "status": "ok", "service_id": "catalog"},
+    )
+    return {"ok": True, "items": public_items(saved, exposed_only=False)}
+
+
+@app.patch("/v1/services/{service_id}")
+def update_service(service_id: str, req: ServicePatch) -> dict:
+    try:
+        item = patch_service(service_id, req)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="service not found") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    log.info(
+        "service_patched",
+        extra={"run_id": "svc", "status": "ok", "service_id": service_id},
+    )
+    items = load_services()
+    return {
+        "ok": True,
+        "item": public_items([item], exposed_only=False)[0],
+        "items": public_items(items, exposed_only=False),
+    }
+
+
+def _pick_provider(req: JobCreate, lane: Any | None = None) -> Literal["mock", "comfyui", "llm"]:
+    resolved = lane or active_lane(load_access(), req.modality)
+    if (not resolved.enabled) or resolved.mock:
+        return "mock"
     if req.modality == "text":
-        return "mock" if settings.ai_mock_text else "llm"
-    if req.modality == "image":
-        return "mock" if (settings.ai_mock_mode or settings.ai_mock_image) else "comfyui"
-    return "mock" if settings.ai_mock_mode else "comfyui"
+        return "llm"
+    return "comfyui"
 
 
 def _fill_output_metrics(job: Job) -> None:
@@ -278,7 +346,9 @@ def _run_comfyui_background(job_id: str, prompt: str, workflow_id: str | None, m
 def create_job(req: JobCreate, background_tasks: BackgroundTasks) -> Job:
     run_id, job_id = _new_ids(req)
     now = utcnow()
-    provider = _pick_provider(req)
+    lane = active_lane(load_access(), req.modality)
+    provider = _pick_provider(req, lane)
+    workflow_id = req.workflow_id or (lane.model if req.modality in ("image", "video") else req.workflow_id)
 
     job = Job(
         id=job_id,
@@ -287,7 +357,7 @@ def create_job(req: JobCreate, background_tasks: BackgroundTasks) -> Job:
         prompt=req.prompt,
         suite_id=req.suite_id,
         case_id=req.case_id,
-        workflow_id=req.workflow_id,
+        workflow_id=workflow_id,
         status="queued",
         provider=provider,
         model=settings.llm_model if provider == "llm" else ("minimax-h3" if provider == "comfyui" else "mock"),
@@ -328,7 +398,7 @@ def create_job(req: JobCreate, background_tasks: BackgroundTasks) -> Job:
             _run_comfyui_background,
             job.id,
             req.prompt,
-            req.workflow_id,
+            workflow_id,
             req.modality,
         )
         job.output_url = _public_url(job.id)

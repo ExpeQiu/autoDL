@@ -30,6 +30,7 @@ echo "[2] CLI 基础"
 autodl --version
 autodl --help >/dev/null
 autodl job --help >/dev/null
+autodl service --help >/dev/null
 
 echo "[3] config check"
 CHECK="$(autodl --demo config check --format json)"
@@ -103,6 +104,16 @@ assert d['ok'] and d['items'][0]['modality']==sys.argv[1], d
 print('  PASS modality', sys.argv[1])
 " "$m"
 done
+
+echo "[7b] service list --demo"
+autodl --demo service list --format json | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+assert d.get('module')=='service.list' and d.get('ok') is True, d
+mods={i.get('modality') for i in d['items']}
+assert mods=={'text','image','video'}, d
+print('  PASS service.list demo count=', d.get('count'))
+"
 
 echo "[8] power-on 无授权应失败"
 set +e
@@ -192,6 +203,13 @@ assert d.get('job_id','').startswith('job_'), d
 assert d.get('run_id','').startswith('run_'), d
 print('  PASS live job.submit', d['job_id'], d['items'][0].get('status'))
 "
+  AUTODL_MOCK=false autodl service list --format json | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+assert d.get('module')=='service.list' and d.get('data_source')=='live', d
+assert {'text','image','video'} <= {i.get('modality') for i in d['items']}, d
+print('  PASS live service.list count=', d.get('count'))
+"
 else
   echo "  SKIP $ORCH 未就绪"
 fi
@@ -220,6 +238,7 @@ python3 -c "
 from autodl_cli.mcp_adapter import call_tool, list_tools
 names = {t['name'] for t in list_tools()}
 assert 'autodl_job_submit_demo' in names, names
+assert 'autodl_service_list' in names, names
 for blocked in ('autodl_instance_power_on', 'autodl_instance_power_off', 'autodl_job_submit_live', 'autodl_tunnel_start'):
     assert blocked not in names, blocked
 r = call_tool('autodl_job_submit_demo', {'prompt': 'verify mcp'})

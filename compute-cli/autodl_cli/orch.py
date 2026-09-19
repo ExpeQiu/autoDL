@@ -102,6 +102,18 @@ def list_jobs(modality: str | None = None, limit: int = 50) -> list[dict[str, An
     return []
 
 
+def list_services(*, exposed: bool | None = None, modality: str | None = None) -> list[dict[str, Any]]:
+    params: dict[str, Any] = {}
+    if exposed is True:
+        params["exposed"] = True
+    data = request("GET", "/v1/services", params=params or None, timeout_s=10.0).json()
+    items = data.get("items") if isinstance(data, dict) else []
+    rows = list(items or [])
+    if modality:
+        rows = [item for item in rows if item.get("modality") == modality]
+    return rows
+
+
 def wait_job(job_id: str, *, timeout_s: float = 180.0, interval_s: float = 1.0) -> dict[str, Any]:
     deadline = time.time() + timeout_s
     last: dict[str, Any] | None = None

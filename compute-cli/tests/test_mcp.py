@@ -19,6 +19,7 @@ def test_list_tools_only_agent_safe() -> None:
     assert "autodl_job_submit_demo" in names
     assert "autodl_config_check" in names
     assert "autodl_tunnel_status" in names
+    assert "autodl_service_list" in names
     for blocked in BLOCKED:
         assert f"autodl_{blocked.replace('-', '_')}" not in names
     mcp_names = {t["name"] for t in handle_list_tools()}
@@ -55,6 +56,16 @@ def test_handle_call_tool_error_flag() -> None:
     assert payload["isError"] is True
     body = json.loads(payload["content"][0]["text"])
     assert body["ok"] is False
+
+
+def test_service_list_via_adapter() -> None:
+    result = call_tool("autodl_service_list", {})
+    assert result["ok"] is True
+    envelope = result["result"]
+    assert envelope.get("module") == "service.list"
+    assert envelope.get("data_source") == "demo"
+    mods = {item["modality"] for item in envelope["items"]}
+    assert mods == {"text", "image", "video"}
 
 
 def test_stdio_tools_list() -> None:

@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -25,6 +26,7 @@ class Settings(BaseSettings):
     orch_port: int = 8090
     log_level: str = "INFO"
     comfyui_endpoint: str = "http://127.0.0.1:8188"
+    comfyui_video_endpoint: str = "http://127.0.0.1:8188"
     comfyui_timeout_ms: int = 1800000
     comfyui_poll_interval_ms: int = 3000
     comfyui_video_width: int = 768
@@ -35,9 +37,20 @@ class Settings(BaseSettings):
     llm_api_key: str = "sk-local"
     llm_model: str = "qwen3-8b"
     llm_timeout_s: float = 180.0
+    comfyui_ssh_host: str = "connect.westc.seetacloud.com"
+    comfyui_ssh_port: int = 0
+    comfyui_ssh_user: str = "root"
+    comfyui_ssh_key_path: str = ""
     artifacts_dir: Path = ROOT / "artifacts"
     sqlite_path: Path = ROOT / "data" / "jobs.sqlite"
     log_path: Path = ROOT / "logs" / "orchestrator.log"
+
+    @field_validator("comfyui_ssh_port", mode="before")
+    @classmethod
+    def empty_ssh_port(cls, value: object) -> object:
+        if value == "" or value is None:
+            return 0
+        return value
 
 
 settings = Settings()
@@ -56,7 +69,7 @@ class JsonFormatter(logging.Formatter):
             "msg": record.getMessage(),
             "logger": record.name,
         }
-        for key in ("run_id", "job_id", "modality", "provider", "status", "elapsed_ms"):
+        for key in ("run_id", "job_id", "modality", "provider", "status", "elapsed_ms", "service_id"):
             value = getattr(record, key, None)
             if value is not None:
                 payload[key] = value

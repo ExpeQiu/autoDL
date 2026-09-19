@@ -27,6 +27,7 @@ compute-cli (autodl)
       ├── tunnel    → ssh -L 8188/8088
       ├── compute   → 本机 :8188 / :8088 健康
       ├── job       → orchestrator :8090
+      ├── service   → orchestrator :8090 `/v1/services`
       └── llm       → 本机 :8088 OpenAI 兼容
 ```
 
@@ -47,6 +48,7 @@ compute-cli (autodl)
 | `job list [--modality]` | 列表 | A | 10s |
 | `job wait <id>` | 等到终态 | B | 图 180s / 视频 1800s |
 | `job file <id> -o PATH` | 拉产物 | A | 60s |
+| `service list [--exposed] [--modality]` | 对外服务目录（文/图/视频） | A | 10s |
 | `llm chat --prompt` | 文本一轮 | A（`--demo`）；C（真模型） | 180s |
 
 禁止 Agent 自动调用：改 SSH 密码、写 Cookie、释放/销毁实例、交互式登录。

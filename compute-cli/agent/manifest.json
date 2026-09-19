@@ -134,6 +134,29 @@
       "exit_codes": { "0": "success" }
     },
     {
+      "name": "service-list",
+      "description": "对外暴露的文本/图片/视频服务目录",
+      "cli_template": "autodl --demo service list --format json",
+      "agent_safe": true,
+      "interactive": false,
+      "timeout_sec": 10,
+      "params": {
+        "exposed": {
+          "type": "boolean",
+          "default": false,
+          "description": "只列出已对外暴露"
+        },
+        "modality": {
+          "type": "string",
+          "enum": ["text", "image", "video"],
+          "default": null,
+          "description": "按模态过滤"
+        }
+      },
+      "output": { "format": "json" },
+      "exit_codes": { "0": "success", "2": "not_ready" }
+    },
+    {
       "name": "job-file",
       "description": "拉取任务产物",
       "cli_template": "autodl job file {job_id} --format json",

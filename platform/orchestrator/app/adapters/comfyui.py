@@ -26,7 +26,7 @@ class ComfyUIError(Exception):
 
 
 def check_comfyui_health(timeout_s: float = 5.0) -> dict:
-    if settings.ai_mock_mode:
+    if settings.ai_mock_mode and settings.ai_mock_image:
         return {
             "ok": True,
             "provider": "mock",
@@ -96,23 +96,25 @@ def build_prompt(workflow_data: dict[str, Any], params: dict[str, Any]) -> dict[
     return prompt
 
 
-def _request(method: str, path: str, timeout: float, **kwargs: Any) -> httpx.Response:
-    url = settings.comfyui_endpoint.rstrip("/") + "/" + path.lstrip("/")
+def _request(method: str, path: str, timeout: float, *, endpoint: str | None = None, **kwargs: Any) -> httpx.Response:
+    base = (endpoint or settings.comfyui_endpoint).rstrip("/")
+    url = base + "/" + path.lstrip("/")
     try:
         with httpx.Client(timeout=timeout) as client:
             resp = client.request(method, url, **kwargs)
     except httpx.HTTPError as exc:
-        raise ComfyUIError(f"无法连接 ComfyUI: {settings.comfyui_endpoint}") from exc
+        raise ComfyUIError(f"无法连接 ComfyUI: {base}") from exc
     if resp.status_code >= 400:
         raise ComfyUIError(f"ComfyUI 返回错误 {resp.status_code}: {resp.text[:500]}")
     return resp
 
 
-def submit_prompt(prompt: dict[str, Any], client_id: str) -> str:
+def submit_prompt(prompt: dict[str, Any], client_id: str, *, endpoint: str | None = None) -> str:
     data = _request(
         "POST",
         "/prompt",
         timeout=30,
+        endpoint=endpoint,
         json={"prompt": prompt, "client_id": client_id},
     ).json()
     if data.get("error"):
@@ -125,10 +127,12 @@ def submit_prompt(prompt: dict[str, Any], client_id: str) -> str:
     return str(prompt_id)
 
 
-def wait_for_outputs(prompt_id: str, timeout_s: float, poll_s: float) -> dict[str, Any]:
+def wait_for_outputs(
+    prompt_id: str, timeout_s: float, poll_s: float, *, endpoint: str | None = None
+) -> dict[str, Any]:
     deadline = time.time() + timeout_s
     while time.time() < deadline:
-        history = _request("GET", f"/history/{prompt_id}", timeout=30).json()
+        history = _request("GET", f"/history/{prompt_id}", timeout=30, endpoint=endpoint).json()
         item = history.get(prompt_id)
         if item:
             status = item.get("status") or {}
@@ -162,11 +166,12 @@ def _iter_output_files(history: dict[str, Any]) -> list[dict[str, Any]]:
     return files
 
 
-def download_file(file_info: dict[str, Any], dest: Path) -> Path:
+def download_file(file_info: dict[str, Any], dest: Path, *, endpoint: str | None = None) -> Path:
     resp = _request(
         "GET",
         "/view",
         timeout=120,
+        endpoint=endpoint,
         params={
             "filename": file_info["filename"],
             "subfolder": file_info.get("subfolder") or "",
@@ -192,7 +197,7 @@ def run_video_job(prompt_text: str, workflow_id: str | None, dest: Path) -> Path
     }
     graph = build_prompt(workflow, params)
     client_id = str(uuid.uuid4())
-    prompt_id = submit_prompt(graph, client_id)
+    prompt_id = submit_prompt(graph, client_id, endpoint=settings.comfyui_video_endpoint or settings.comfyui_endpoint)
     from ..config import setup_logging
 
     setup_logging().info(
@@ -203,7 +208,8 @@ def run_video_job(prompt_text: str, workflow_id: str | None, dest: Path) -> Path
     )
     timeout_s = settings.comfyui_timeout_ms / 1000.0
     poll_s = settings.comfyui_poll_interval_ms / 1000.0
-    history = wait_for_outputs(prompt_id, timeout_s, poll_s)
+    comfy = settings.comfyui_video_endpoint or settings.comfyui_endpoint
+    history = wait_for_outputs(prompt_id, timeout_s, poll_s, endpoint=comfy)
     files = _iter_output_files(history)
     if not files:
         raise ComfyUIError(f"未找到输出文件 prompt_id={prompt_id}")
@@ -212,4 +218,4 @@ def run_video_job(prompt_text: str, workflow_id: str | None, dest: Path) -> Path
         files[0],
     )
     suffix = Path(preferred["filename"]).suffix or ".mp4"
-    return download_file(preferred, dest.with_suffix(suffix))
+    return download_file(preferred, dest.with_suffix(suffix), endpoint=comfy)

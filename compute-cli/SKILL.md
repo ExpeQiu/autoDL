@@ -17,6 +17,7 @@ metadata:
     - job-list
     - job-file
     - llm-chat-demo
+    - service-list
   human_required_commands:
     - instance-power-on
     - instance-power-off
@@ -76,6 +77,17 @@ autodl job submit --modality image --prompt "一只猫" --demo --format json
 autodl job get job_xxx --format json
 autodl job file job_xxx -o /tmp/out.svg --format json
 ```
+
+发现对外服务（文本 / 图片 / 视频）：
+
+```bash
+autodl --demo service list --format json
+autodl --demo service list --exposed --format json
+```
+
+- 参数：`--exposed` 只列出已打开的；`--modality` 为 `text|image|video`
+- `items[].invoke`：`job submit --modality --workflow`
+- 退出码：0 成功 / 2 编排不可达（live）
 
 文本一轮（Mock）：
 
