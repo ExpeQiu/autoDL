@@ -117,7 +117,7 @@ autodl job submit --modality video --play multi --images "./a.png|./b.png|./c.pn
 |------|------|
 | `--play` | `text` / `first_frame`（1 张 `--image`）/ `first_last_frame`（再加 `--end-image`）/ `multi`（`--images` 用 `\|` 分隔 2–9 张） |
 | `--width` `--height` | 可写 64–4096，默认 768。生效夹到 256–1344，向下对齐 16 |
-| `--duration` `--fps` | 时长 0–60，帧率 1–60。时长大于 0 时换算帧数，对齐 `17k+5`，上限 124。省略则 73 帧 |
+| `--duration` `--fps` | 时长 0–60，帧率 1–60。时长大于 0 时换算帧数，对齐 `17k+5`，上限 243（约 10 秒）。省略则 73 帧 |
 | `--steps` | 1–8，默认 4 |
 | `--seed` | 省略或 `-1` 为随机 |
 

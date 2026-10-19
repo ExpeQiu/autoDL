@@ -39,7 +39,8 @@ class PlanVideoWorkflowTest(unittest.TestCase):
         )
         self.assertEqual(plan_video_workflow("multi", "t2v.u03", has_image=False, image_count=3), ("t2v.r2v", True))
         self.assertEqual(fit_h3_length(5, 24, 73), 124)
-        self.assertEqual(fit_h3_length(10, 24, 73), 124)
+        self.assertEqual(fit_h3_length(10, 24, 73), 243)
+        self.assertEqual(fit_h3_length(30, 24, 73), 243)
         self.assertEqual(fit_h3_side(1280, 768), 1280)
         self.assertEqual(fit_h3_side(1920, 768), 1344)
 

@@ -79,15 +79,19 @@ def fit_h3_side(value: int | None, default: int) -> int:
     return snapped if snapped >= 256 else 256
 
 
+# 24fps 下 10 秒对齐到 17k+5 为 243 帧（10.125 秒）。更长的请求截到这里。
+H3_MAX_FRAMES = 243
+
+
 def fit_h3_length(duration: float | None, fps: int | None, default: int) -> int:
-    """H3 帧数须为 17k+5。本卡 Turbo 工作流上限 124 帧（约 5 秒 / 24fps）。"""
+    """H3 帧数须为 17k+5。上限 243 帧（约 10 秒 / 24fps）。"""
     if duration is not None and float(duration) > 0:
         rate = int(fps) if fps and int(fps) > 0 else 24
         raw = int(round(float(duration) * rate))
     else:
         raw = int(default)
     aligned = align_minimax_h3_frames(raw)
-    return 124 if aligned > 124 else aligned
+    return H3_MAX_FRAMES if aligned > H3_MAX_FRAMES else aligned
 
 
 def plan_video_workflow(

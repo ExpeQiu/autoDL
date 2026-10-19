@@ -588,7 +588,7 @@ def _encode_image_arg(value: str) -> str:
 @click.option("--end-image", default=None, help="首尾帧的尾帧")
 @click.option("--width", type=int, default=None, help="64–4096，生效夹到 256–1344 并对齐 16。默认 768")
 @click.option("--height", type=int, default=None, help="同 width。默认 768")
-@click.option("--duration", type=float, default=None, help="秒，0–60。大于 0 才换算帧数，结果对齐 17k+5 且不超过 124")
+@click.option("--duration", type=float, default=None, help="秒，0–60。大于 0 才换算帧数，结果对齐 17k+5 且不超过 243（约 10 秒）")
 @click.option("--fps", type=int, default=None, help="1–60，默认按 24 换算")
 @click.option("--steps", type=int, default=None, help="1–8，默认 4")
 @click.option("--seed", type=int, default=None, help="省略或 -1 为随机")
