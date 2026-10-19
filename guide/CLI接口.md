@@ -2,7 +2,7 @@
 
 选模板 **6**。参考 `/Volumes/Lexar/git/15CLI/po-monitor-CLI`；规范 `/Volumes/Lexar/git/15CLI/CLI标准.md`。决策见 `ADR/ADR-002-CLI接口.md`。
 
-命令名：`autodl`。数据走 stdout（默认 JSON 给 Agent），日志走 stderr。
+命令名：`autodl`。数据走 stdout（默认 JSON 给 Agent），日志走 stderr。编排在算力机上之后的连法见 [CLI对接.md](./CLI对接.md)。
 
 ## 目标 / 非目标
 

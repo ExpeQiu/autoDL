@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # 启动编排中枢（默认 Mock）。用法：./scripts/start.sh [--fg]
+# SKIP_WEB=1 时只起编排，不装、不启动结果墙（算力机部署用）。
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -104,6 +105,11 @@ if [[ "$code" != "200" ]]; then
   echo "FAIL health http=$code" >&2
   tail -40 "$LOG_FILE" >&2 || true
   exit 1
+fi
+
+if [[ "${SKIP_WEB:-0}" == "1" ]]; then
+  echo "started orch=http://$HOST:$PORT  skip web (mock=${AI_MOCK_MODE:-true})"
+  exit 0
 fi
 
 WEB_DIR="$ROOT/apps/web"
