@@ -43,7 +43,7 @@ compute-cli (autodl)
 | `tunnel stop` | 停转发 | A | 10s |
 | `tunnel status` | 本机 8188/8088 是否在听 | A | 10s |
 | `compute health` | ComfyUI + llama 探活 | A | 15s |
-| `job submit --modality --prompt` | 提交；`--demo` 不碰 GPU | A（仅 `--demo`）；C（真算力） | 60s 提交；视频 wait 见下 |
+| `job submit --modality video --play` | 文生 / 单图 / 首尾帧 / 多图；`--demo` 不碰 GPU | A（仅 `--demo`）；C（真算力） | 60s 提交；视频 wait 见下 |
 | `job get <id>` | 查任务 | A | 10s |
 | `job list [--modality]` | 列表 | A | 10s |
 | `job wait <id>` | 等到终态 | B | 图 180s / 视频 1800s |
@@ -102,11 +102,16 @@ autodl compute health --format json
 autodl instance status --format json
 ```
 
-离线生成（verify / CI / 未授权 GPU）：
+离线视频（Codex / OpenClaw / MCP 用这条，不碰 GPU）：
 
 ```bash
-autodl job submit --modality image --prompt "一只猫" --demo --format json
+autodl job submit --modality video --play text --prompt "海边日落" --demo --format json
+autodl job submit --modality video --play first_frame --image ./first.png --prompt "镜头推进" --demo --format json
+autodl job submit --modality video --play first_last_frame --image ./first.png --end-image ./last.png --prompt "白天过渡到夜晚" --demo --format json
+autodl job submit --modality video --play multi --images "./a.png|./b.png|./c.png" --prompt "<Picture 1> 走向 <Picture 2>" --demo --format json
 ```
+
+`--play`：`text` → `t2v.u03`，`first_frame` → `t2v.i2v`，`first_last_frame` → `t2v.flf2v`，`multi` → `t2v.r2v`（2–9 张，`|` 分隔）。MCP 工具名 `autodl_video_submit_demo`。真算力去掉 `--demo`，且编排与隧道已就绪；该调用不进 MCP。
 
 真算力（需 `AUTODL_ALLOW_POWER=true` 才允许开机；提交真任务需明确授权）：
 

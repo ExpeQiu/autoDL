@@ -77,6 +77,10 @@ def create_job(
     prompt: str,
     workflow_id: str | None = None,
     run_id: str | None = None,
+    play_mode: str | None = None,
+    image_ref: str | None = None,
+    end_image_ref: str | None = None,
+    image_refs: list[str] | None = None,
     timeout_s: float = 180.0,
 ) -> dict[str, Any]:
     body: dict[str, Any] = {"modality": modality, "prompt": prompt}
@@ -84,6 +88,14 @@ def create_job(
         body["workflow_id"] = workflow_id
     if run_id:
         body["run_id"] = run_id
+    if play_mode:
+        body["play_mode"] = play_mode
+    if image_ref:
+        body["image_ref"] = image_ref
+    if end_image_ref:
+        body["end_image_ref"] = end_image_ref
+    if image_refs:
+        body["image_refs"] = image_refs
     return request("POST", "/v1/jobs", json=body, timeout_s=timeout_s).json()
 
 

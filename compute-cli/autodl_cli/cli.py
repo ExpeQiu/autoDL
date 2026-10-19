@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import functools
 import logging
 import shutil
@@ -28,6 +29,7 @@ from autodl_cli.utils.errors import EXIT_AUTH, EXIT_COMPUTE_FAIL, EXIT_ERROR, EX
 from autodl_cli.utils.logger import setup_logger
 from autodl_cli import orch
 from autodl_cli import tunnel as tun
+from autodl_cli.video import PLAY_MODES, VideoRequestError, resolve_video_request
 from autodl_cli import api as autodl_api
 
 log = logging.getLogger("autodl")
@@ -560,10 +562,30 @@ def job() -> None:
     """生成任务"""
 
 
+def _encode_image_arg(value: str) -> str:
+    text = value.strip()
+    if text.startswith("data:") or text.startswith("http://") or text.startswith("https://"):
+        return text
+    path = Path(text).expanduser()
+    if not path.is_file():
+        raise VideoRequestError(f"参考图不存在: {text}")
+    data = path.read_bytes()
+    if not data or len(data) > 20 * 1024 * 1024:
+        raise VideoRequestError("参考图为空或超过 20MB")
+    mime = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp"}.get(path.suffix.lower())
+    if mime is None:
+        raise VideoRequestError(f"不支持的参考图类型: {path.suffix or 'unknown'}")
+    return f"data:{mime};base64,{base64.b64encode(data).decode()}"
+
+
 @job.command("submit")
 @click.option("--modality", type=click.Choice(_MODALITY), required=True)
 @click.option("--prompt", required=True)
-@click.option("--workflow", "workflow_id", default=None, help="t2i.demo | t2v.u03 | llm.chat")
+@click.option("--workflow", "workflow_id", default=None, help="留空时按 --play 选择 t2v.u03 / t2v.i2v / t2v.flf2v / t2v.r2v")
+@click.option("--play", type=click.Choice(PLAY_MODES), default=None, help="text | first_frame | first_last_frame | multi")
+@click.option("--image", "images", multiple=True, help="参考图路径、data URL 或 http。可重复")
+@click.option("--images", "images_csv", default=None, help="多图路径，用 | 分隔。给 Agent 模板用")
+@click.option("--end-image", default=None, help="首尾帧的尾帧")
 @click.option("--run-id", default=None)
 @click.pass_context
 def job_submit(
@@ -571,16 +593,45 @@ def job_submit(
     modality: str,
     prompt: str,
     workflow_id: str | None,
+    play: str | None,
+    images: tuple[str, ...],
+    images_csv: str | None,
+    end_image: str | None,
     run_id: str | None,
 ) -> None:
-    """提交任务。未授权 GPU 时必须 --demo。"""
+    """提交任务。视频可带参考图。未授权 GPU 时必须 --demo。"""
+    try:
+        encoded = [_encode_image_arg(item) for item in images if item and item.strip()]
+        if images_csv and images_csv.strip():
+            encoded.extend(_encode_image_arg(part) for part in images_csv.split("|") if part.strip())
+        end_encoded = _encode_image_arg(end_image) if end_image and end_image.strip() else None
+        video = resolve_video_request(
+            modality=modality,
+            play=play,
+            images=encoded,
+            end_image=end_encoded,
+        )
+    except VideoRequestError as exc:
+        env = make_envelope(module="job.submit", data_source=_source(bool(ctx.obj.get("demo"))), ok=False, items=[], error=str(exc))
+        log.warning("job_submit_rejected", extra={"cmd": "job.submit", "status": "rejected"})
+        _done(ctx, env, EXIT_ERROR)
+        return
+    chosen_workflow = workflow_id or video.get("workflow_id")
+    log.info(
+        "job_submit",
+        extra={"cmd": "job.submit", "status": video.get("play_mode") or modality, "service_id": chosen_workflow},
+    )
     if _live(ctx):
         try:
             job_row = orch.create_job(
                 modality=modality,
                 prompt=prompt,
-                workflow_id=workflow_id,
+                workflow_id=chosen_workflow,
                 run_id=run_id,
+                play_mode=video.get("play_mode"),
+                image_ref=video.get("image_ref"),
+                end_image_ref=video.get("end_image_ref"),
+                image_refs=video.get("image_refs"),
             )
         except orch.OrchError as exc:
             _fail_orch(ctx, "job.submit", exc)
@@ -590,8 +641,9 @@ def job_submit(
     job_row = create_demo_job(
         modality=modality,  # type: ignore[arg-type]
         prompt=prompt,
-        workflow_id=workflow_id,
+        workflow_id=chosen_workflow,
         run_id=run_id,
+        play_mode=video.get("play_mode"),
     )
     _emit_job(ctx, "job.submit", job_row, "demo")
 

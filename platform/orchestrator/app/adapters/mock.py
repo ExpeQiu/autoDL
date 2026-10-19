@@ -29,8 +29,10 @@ def run_mock_job(job: Job, req: JobCreate) -> Job:
     elif req.modality == "image":
         label = (req.prompt[:42] + "…") if len(req.prompt) > 42 else req.prompt
         label = html.escape(label)
+        width = max(64, min(2048, int(req.width or 768)))
+        height = max(64, min(2048, int(req.height or 512)))
         svg = (
-            "<svg xmlns='http://www.w3.org/2000/svg' width='768' height='512'>"
+            f"<svg xmlns='http://www.w3.org/2000/svg' width='{width}' height='{height}'>"
             "<defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>"
             "<stop offset='0%' stop-color='#1c1917'/><stop offset='100%' stop-color='#431407'/>"
             "</linearGradient></defs>"

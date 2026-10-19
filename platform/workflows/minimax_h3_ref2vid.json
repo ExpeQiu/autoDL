@@ -1,0 +1,252 @@
+{
+  "name": "MiniMax H3 多图参考视频",
+  "version": "1.0",
+  "profile": "autodl_h3",
+  "description": "2 到 9 张参考图接入 MiniMaxH3ReferenceToVideo 的 ref_images，Ref2VA + turbo 4-step。提示词用 <Picture 1> 起。",
+  "frame_align": "minimax_h3",
+  "native_fps": 24,
+  "models": {
+    "diffusion": "minimax_h3_ref2va_pruned_int8_convrot.safetensors",
+    "clip": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+    "vae": "minimax_h3_video_vae_fp16.safetensors",
+    "audio_vae": "minimax_h3_audio_vae_fp32.safetensors",
+    "lora": "minimax_h3_ref2v_turbo_4step_v0.1_comfyui_bf16.safetensors"
+  },
+  "defaults": {
+    "positive_prompt": "slow camera movement, cinematic motion. Audio: quiet room tone.",
+    "width": 1344,
+    "height": 768,
+    "length": 124,
+    "steps": 4,
+    "seed": -1
+  },
+  "required_nodes": [
+    "UNETLoader",
+    "CLIPLoader",
+    "VAELoader",
+    "LoraLoaderModelOnly",
+    "LoadImage",
+    "MiniMaxH3ReferenceToVideo",
+    "RandomNoise",
+    "KSamplerSelect",
+    "BasicScheduler",
+    "BasicGuider",
+    "SamplerCustomAdvanced",
+    "VAEDecode",
+    "VAEDecodeAudio",
+    "CreateVideo",
+    "SaveVideo"
+  ],
+  "inject": {
+    "positive_prompt": [
+      "8",
+      "inputs",
+      "prompt"
+    ],
+    "width": [
+      "8",
+      "inputs",
+      "width"
+    ],
+    "height": [
+      "8",
+      "inputs",
+      "height"
+    ],
+    "length": [
+      "8",
+      "inputs",
+      "length"
+    ],
+    "seed": [
+      "9",
+      "inputs",
+      "noise_seed"
+    ],
+    "steps": [
+      "11",
+      "inputs",
+      "steps"
+    ]
+  },
+  "output_nodes": [
+    "17"
+  ],
+  "prompt": {
+    "3": {
+      "class_type": "UNETLoader",
+      "inputs": {
+        "unet_name": "minimax_h3_ref2va_pruned_int8_convrot.safetensors",
+        "weight_dtype": "default"
+      }
+    },
+    "4": {
+      "class_type": "CLIPLoader",
+      "inputs": {
+        "clip_name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+        "type": "minimax",
+        "device": "default"
+      }
+    },
+    "5": {
+      "class_type": "VAELoader",
+      "inputs": {
+        "vae_name": "minimax_h3_video_vae_fp16.safetensors"
+      }
+    },
+    "6": {
+      "class_type": "VAELoader",
+      "inputs": {
+        "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+      }
+    },
+    "7": {
+      "class_type": "LoraLoaderModelOnly",
+      "inputs": {
+        "model": [
+          "3",
+          0
+        ],
+        "lora_name": "minimax_h3_ref2v_turbo_4step_v0.1_comfyui_bf16.safetensors",
+        "strength_model": 1.0
+      }
+    },
+    "8": {
+      "class_type": "MiniMaxH3ReferenceToVideo",
+      "inputs": {
+        "clip": [
+          "4",
+          0
+        ],
+        "vae": [
+          "5",
+          0
+        ],
+        "audio_vae": [
+          "6",
+          0
+        ],
+        "prompt": "slow camera movement, cinematic motion. Audio: quiet room tone.",
+        "width": 1344,
+        "height": 768,
+        "length": 124,
+        "ref_image_size": "match"
+      }
+    },
+    "9": {
+      "class_type": "RandomNoise",
+      "inputs": {
+        "noise_seed": 0
+      }
+    },
+    "10": {
+      "class_type": "KSamplerSelect",
+      "inputs": {
+        "sampler_name": "res_multistep"
+      }
+    },
+    "11": {
+      "class_type": "BasicScheduler",
+      "inputs": {
+        "model": [
+          "7",
+          0
+        ],
+        "scheduler": "simple",
+        "steps": 4,
+        "denoise": 1.0
+      }
+    },
+    "12": {
+      "class_type": "BasicGuider",
+      "inputs": {
+        "model": [
+          "7",
+          0
+        ],
+        "conditioning": [
+          "8",
+          0
+        ]
+      }
+    },
+    "13": {
+      "class_type": "SamplerCustomAdvanced",
+      "inputs": {
+        "noise": [
+          "9",
+          0
+        ],
+        "guider": [
+          "12",
+          0
+        ],
+        "sampler": [
+          "10",
+          0
+        ],
+        "sigmas": [
+          "11",
+          0
+        ],
+        "latent_image": [
+          "8",
+          1
+        ]
+      }
+    },
+    "14": {
+      "class_type": "VAEDecode",
+      "inputs": {
+        "samples": [
+          "13",
+          0
+        ],
+        "vae": [
+          "5",
+          0
+        ]
+      }
+    },
+    "15": {
+      "class_type": "VAEDecodeAudio",
+      "inputs": {
+        "samples": [
+          "13",
+          0
+        ],
+        "vae": [
+          "6",
+          0
+        ]
+      }
+    },
+    "16": {
+      "class_type": "CreateVideo",
+      "inputs": {
+        "images": [
+          "14",
+          0
+        ],
+        "audio": [
+          "15",
+          0
+        ],
+        "fps": 24,
+        "bit_depth": 8
+      }
+    },
+    "17": {
+      "class_type": "SaveVideo",
+      "inputs": {
+        "video": [
+          "16",
+          0
+        ],
+        "filename_prefix": "vplatform_h3_r2v",
+        "format": "auto",
+        "codec": "auto"
+      }
+    }
+  }
+}

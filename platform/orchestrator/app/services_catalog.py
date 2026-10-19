@@ -49,7 +49,7 @@ DEFAULT_SERVICES: list[ExposedService] = [
         provider="comfyui",
         workflow_id="t2v.u03",
         exposed=True,
-        description="MiniMax H3 / Mock 视频",
+        description="MiniMax H3 文生视频；有参考图时改走图生视频",
     ),
 ]
 

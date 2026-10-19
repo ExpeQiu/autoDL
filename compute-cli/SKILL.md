@@ -1,6 +1,6 @@
 ---
 name: autodl
-description: AutoDL 算力 CLI。探活、Mock 生成任务、按需开关 GPU（需授权）。供 OpenClaw / Hermes / Cursor 调用。
+description: AutoDL 算力 CLI。探活、文生/单图/首尾帧/多图视频、按需开关 GPU（需授权）。供 Codex / OpenClaw / Hermes / Cursor 调用。
 version: 0.1.0
 metadata:
   cli_command: autodl
@@ -13,6 +13,7 @@ metadata:
     - wallet-balance
     - tunnel-status
     - job-submit-demo
+    - video-submit-demo
     - job-get
     - job-list
     - job-file
@@ -67,7 +68,19 @@ AUTODL_MOCK=false autodl job submit --modality image --prompt "一只猫" --form
 autodl job submit --modality image --prompt "一只猫" --demo --format json
 ```
 
-- 参数：`--modality` 为 `text|image|video`；`--prompt` 必填；`--workflow` 可选
+提交 Mock 视频（agent_safe，Codex / OpenClaw 用同一条命令）：
+
+```bash
+autodl job submit --modality video --play text --prompt "海边日落" --demo --format json
+autodl job submit --modality video --play first_frame --image ./first.png --prompt "镜头推进" --demo --format json
+autodl job submit --modality video --play first_last_frame --image ./first.png --end-image ./last.png --prompt "白天过渡到夜晚" --demo --format json
+autodl job submit --modality video --play multi --images "./a.png|./b.png" --prompt "<Picture 1> 走向 <Picture 2>" --demo --format json
+```
+
+- `--play`：`text` 文生视频、`first_frame` 单图、`first_last_frame` 首尾帧、`multi` 多图（2–9 张，路径用 `|` 分隔）
+- 多图提示词按顺序写 `<Picture 1>` `<Picture 2>`
+- 真算力去掉 `--demo`。MCP 只暴露 `autodl_video_submit_demo`，不暴露无 `--demo` 的提交
+- 参数：`--modality` 为 `text|image|video`；`--prompt` 必填；`--workflow` 可选，视频留空时按 `--play` 选择
 - 退出码：0 成功 / 1 配置错误 / 2 任务不存在或未就绪 / 3 算力失败 / 4 Token 或余额
 - 输出字段：`module`, `data_source`, `ok`, `run_id`, `job_id`, `items[0].status`, `items[0].output_uri`
 

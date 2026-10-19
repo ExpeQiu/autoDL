@@ -10,7 +10,16 @@ from pydantic import ValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse
 
-from .adapters.comfyui import ComfyUIError, check_comfyui_health, run_video_job
+from .adapters.comfyui import (
+    ComfyUIError,
+    check_comfyui_health,
+    choose_video_workflow,
+    fit_h3_length,
+    fit_h3_side,
+    load_image_ref,
+    plan_video_workflow,
+    run_video_job,
+)
 from .adapters.llm import check_llm_health, generate_text
 from .adapters.mock import run_mock_job
 from .config import settings, setup_logging
@@ -312,7 +321,20 @@ def _run_llm_background(job_id: str, prompt: str) -> None:
         )
 
 
-def _run_comfyui_background(job_id: str, prompt: str, workflow_id: str | None, modality: str) -> None:
+def _run_comfyui_background(
+    job_id: str,
+    prompt: str,
+    workflow_id: str | None,
+    modality: str,
+    image_ref: str | None = None,
+    end_image_ref: str | None = None,
+    image_refs: list[str] | None = None,
+    width: int | None = None,
+    height: int | None = None,
+    length: int | None = None,
+    steps: int | None = None,
+    seed: int | None = None,
+) -> None:
     job = JOBS.get(job_id)
     if job is None:
         return
@@ -320,9 +342,55 @@ def _run_comfyui_background(job_id: str, prompt: str, workflow_id: str | None, m
     try:
         if modality != "video":
             raise ComfyUIError("本实例无文生图权重，图片请保持 AI_MOCK_IMAGE=true")
+        image: bytes | None = None
+        image_filename = "input.png"
+        last_image: bytes | None = None
+        last_filename = "last.png"
+        ref_images: list[tuple[bytes, str]] = []
+        if end_image_ref and end_image_ref.strip():
+            last_image, last_filename = load_image_ref(end_image_ref, stem="last")
+        if image_ref and image_ref.strip():
+            image, image_filename = load_image_ref(image_ref, stem="first" if last_image is not None else "input")
+        for index, raw in enumerate(image_refs or []):
+            if raw and raw.strip():
+                ref_images.append(load_image_ref(raw, stem=f"ref{index}"))
+        job.workflow_id = choose_video_workflow(
+            workflow_id,
+            has_image=image is not None,
+            has_end_image=last_image is not None,
+            ref_count=len(ref_images),
+        )
+        if image is not None or last_image is not None or ref_images:
+            log.info(
+                "job_image_ref",
+                extra={
+                    "run_id": job.run_id,
+                    "job_id": job.id,
+                    "modality": job.modality,
+                    "provider": job.provider,
+                    "status": "running",
+                    "service_id": job.workflow_id,
+                    "has_image": image is not None,
+                    "has_last": last_image is not None or bool(ref_images),
+                },
+            )
         settings.artifacts_dir.mkdir(parents=True, exist_ok=True)
         dest = settings.artifacts_dir / job.id
-        out = run_video_job(prompt, workflow_id, dest)
+        out = run_video_job(
+            prompt,
+            job.workflow_id,
+            dest,
+            image=image,
+            image_filename=image_filename,
+            last_image=last_image,
+            last_image_filename=last_filename,
+            ref_images=ref_images or None,
+            width=width,
+            height=height,
+            length=length,
+            steps=steps,
+            seed=seed,
+        )
         if job_id not in JOBS:
             return
         job.output_uri = str(out)
@@ -344,11 +412,47 @@ def _run_comfyui_background(job_id: str, prompt: str, workflow_id: str | None, m
 
 @app.post("/v1/jobs", status_code=201)
 def create_job(req: JobCreate, background_tasks: BackgroundTasks) -> Job:
+    image_ref = (req.image_ref or "").strip() or None
+    end_image_ref = (req.end_image_ref or "").strip() or None
+    image_refs = [item.strip() for item in (req.image_refs or []) if item and item.strip()]
+    video_width = video_height = video_length = None
+    if req.modality == "image" and ((req.play_mode or "") == "i2i" or image_ref):
+        raise HTTPException(status_code=422, detail="本实例无图生图权重，带参考图请走云端")
+    if req.modality == "video":
+        try:
+            planned, use_image = plan_video_workflow(
+                req.play_mode,
+                req.workflow_id,
+                has_image=bool(image_ref),
+                has_end_image=bool(end_image_ref),
+                image_count=len(image_refs),
+            )
+        except ComfyUIError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        if planned == "t2v.r2v":
+            image_ref = None
+            end_image_ref = None
+        elif planned == "t2v.flf2v":
+            image_refs = None
+        else:
+            end_image_ref = None
+            image_refs = None
+        if not use_image:
+            image_ref = None
+            end_image_ref = None
+            image_refs = None
+        req_workflow: str | None = planned
+        video_width = fit_h3_side(req.width, settings.comfyui_video_width)
+        video_height = fit_h3_side(req.height, settings.comfyui_video_height)
+        video_length = fit_h3_length(req.duration, req.fps, settings.comfyui_video_length)
+    else:
+        req_workflow = req.workflow_id
+
     run_id, job_id = _new_ids(req)
     now = utcnow()
     lane = active_lane(load_access(), req.modality)
     provider = _pick_provider(req, lane)
-    workflow_id = req.workflow_id or (lane.model if req.modality in ("image", "video") else req.workflow_id)
+    workflow_id = req_workflow or (lane.model if req.modality in ("image", "video") else req.workflow_id)
 
     job = Job(
         id=job_id,
@@ -400,6 +504,14 @@ def create_job(req: JobCreate, background_tasks: BackgroundTasks) -> Job:
             req.prompt,
             workflow_id,
             req.modality,
+            image_ref,
+            end_image_ref,
+            image_refs,
+            video_width,
+            video_height,
+            video_length,
+            req.steps,
+            req.seed,
         )
         job.output_url = _public_url(job.id)
         return job

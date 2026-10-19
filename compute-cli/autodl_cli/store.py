@@ -77,6 +77,7 @@ def create_demo_job(
     run_id: str | None = None,
     suite_id: str | None = None,
     case_id: str | None = None,
+    play_mode: str | None = None,
 ) -> dict[str, Any]:
     jobs = _load()
     run_id = run_id or f"run_{uuid.uuid4().hex[:12]}"
@@ -91,6 +92,7 @@ def create_demo_job(
         "suite_id": suite_id,
         "case_id": case_id,
         "workflow_id": workflow,
+        "play_mode": play_mode,
         "status": "succeeded",
         "provider": "mock",
         "output_uri": _write_artifact(job_id, prompt, modality),

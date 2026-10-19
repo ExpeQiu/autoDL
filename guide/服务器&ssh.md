@@ -1,3 +1,5 @@
+换到新实例：按 [新服务器重新部署.md](./新服务器重新部署.md) 全量复现。SSH 端口每次开机可能变化，以控制台为准，不要写进业务代码。
+
 ## 服务器1
 
 ### 服务器信息
@@ -24,3 +26,6 @@ ssh -L 8188:127.0.0.1:8188 -p 30856 root@connect.westc.seetacloud.com
 
 ## 服务器2
 
+
+ssh -p 16659 root@connect.westd.seetacloud.com
+密码：xmrYP2wSgKzz

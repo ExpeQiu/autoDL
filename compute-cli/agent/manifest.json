@@ -110,6 +110,43 @@
       "exit_codes": { "0": "success", "1": "config_error", "3": "compute_fail" }
     },
     {
+      "name": "video-submit-demo",
+      "description": "提交 Mock 视频：文生、单图、首尾帧、多图。不碰 GPU",
+      "cli_template": "autodl job submit --modality video --play {play} --prompt {prompt} --image {image} --end-image {end_image} --images {images} --demo --format json",
+      "agent_safe": true,
+      "interactive": false,
+      "timeout_sec": 30,
+      "params": {
+        "play": {
+          "type": "string",
+          "enum": ["text", "first_frame", "first_last_frame", "multi"],
+          "default": "text",
+          "description": "text 文生视频；first_frame 单图；first_last_frame 首尾帧；multi 多图"
+        },
+        "prompt": {
+          "type": "string",
+          "description": "提示词。多图时用 <Picture 1> 按顺序点名"
+        },
+        "image": {
+          "type": "string",
+          "default": "",
+          "description": "单图或首帧的本地路径。文生和多图留空"
+        },
+        "end_image": {
+          "type": "string",
+          "default": "",
+          "description": "尾帧本地路径。仅 first_last_frame 填写"
+        },
+        "images": {
+          "type": "string",
+          "default": "",
+          "description": "多图本地路径，用 | 分隔，2 到 9 张。仅 multi 填写"
+        }
+      },
+      "output": { "format": "json" },
+      "exit_codes": { "0": "success", "1": "config_error" }
+    },
+    {
       "name": "job-get",
       "description": "查询任务",
       "cli_template": "autodl job get {job_id} --format json",
