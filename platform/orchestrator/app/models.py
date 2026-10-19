@@ -21,7 +21,7 @@ class JobCreate(BaseModel):
     play_mode: str | None = Field(default=None, max_length=32)
     width: int | None = Field(default=None, ge=64, le=4096)
     height: int | None = Field(default=None, ge=64, le=4096)
-    steps: int | None = Field(default=None, ge=1, le=50)
+    steps: int | None = Field(default=None, ge=1, le=8)
     seed: int | None = None
     duration: float | None = Field(default=None, ge=0, le=60)
     fps: int | None = Field(default=None, ge=1, le=60)

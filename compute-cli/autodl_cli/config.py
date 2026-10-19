@@ -91,7 +91,7 @@ def instance_uuid() -> str:
 
 
 def ssh_host() -> str:
-    return os.getenv("COMFYUI_SSH_HOST", "connect.westc.seetacloud.com").strip()
+    return os.getenv("COMFYUI_SSH_HOST", "connect.westd.seetacloud.com").strip()
 
 
 def ssh_port() -> str:

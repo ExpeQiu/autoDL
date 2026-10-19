@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     llm_api_key: str = "sk-local"
     llm_model: str = "qwen3-8b"
     llm_timeout_s: float = 180.0
-    comfyui_ssh_host: str = "connect.westc.seetacloud.com"
+    comfyui_ssh_host: str = "connect.westd.seetacloud.com"
     comfyui_ssh_port: int = 0
     comfyui_ssh_user: str = "root"
     comfyui_ssh_key_path: str = ""

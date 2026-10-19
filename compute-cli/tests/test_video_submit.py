@@ -6,7 +6,7 @@ from pathlib import Path
 from click.testing import CliRunner
 
 from autodl_cli.cli import cli
-from autodl_cli.video import VideoRequestError, resolve_video_request
+from autodl_cli.video import VideoRequestError, resolve_video_request, video_controls
 from tests.util import load_envelope
 
 PNG = base64.b64decode(
@@ -28,6 +28,29 @@ def test_resolve_four_plays() -> None:
     assert many["play_mode"] == "multi"
     assert many["workflow_id"] == "t2v.r2v"
     assert many["image_refs"] == ["a.png", "b.png", "c.png"]
+
+
+def test_controls_bounds() -> None:
+    assert video_controls(width=1344, height=768, steps=4) == {"width": 1344, "height": 768, "steps": 4}
+    assert video_controls() == {}
+    try:
+        video_controls(steps=9)
+    except VideoRequestError as exc:
+        assert "1–8" in str(exc)
+    else:
+        raise AssertionError("expected error")
+
+
+def test_cli_passes_steps(tmp_path: Path) -> None:
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        ["--demo", "job", "submit", "--modality", "video", "--play", "text", "--prompt", "海边", "--steps", "4", "--width", "1344", "--format", "json"],
+    )
+    assert result.exit_code == 0, result.output
+    item = load_envelope(result.output)["items"][0]
+    assert item["steps"] == 4
+    assert item["width"] == 1344
 
 
 def test_resolve_rejects_bad_counts() -> None:

@@ -45,7 +45,7 @@ curl http://127.0.0.1:8188/system_stats
 ## 2. 本机打隧道
 
 ```bash
-ssh -L 8188:127.0.0.1:8188 -p <SSH端口> root@connect.westc.seetacloud.com
+ssh -L 8188:127.0.0.1:8188 -p <SSH端口> root@connect.westd.seetacloud.com
 ```
 
 保持该会话不断。本机再测：

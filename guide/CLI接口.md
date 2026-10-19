@@ -111,7 +111,17 @@ autodl job submit --modality video --play first_last_frame --image ./first.png -
 autodl job submit --modality video --play multi --images "./a.png|./b.png|./c.png" --prompt "<Picture 1> 走向 <Picture 2>" --demo --format json
 ```
 
-`--play`：`text` → `t2v.u03`，`first_frame` → `t2v.i2v`，`first_last_frame` → `t2v.flf2v`，`multi` → `t2v.r2v`（2–9 张，`|` 分隔）。MCP 工具名 `autodl_video_submit_demo`。真算力去掉 `--demo`，且编排与隧道已就绪；该调用不进 MCP。
+参数规则与 `POST /v1/jobs` 相同，详见 `platform/guide/架构与契约.md`。
+
+| 参数 | 规则 |
+|------|------|
+| `--play` | `text` / `first_frame`（1 张 `--image`）/ `first_last_frame`（再加 `--end-image`）/ `multi`（`--images` 用 `\|` 分隔 2–9 张） |
+| `--width` `--height` | 可写 64–4096，默认 768。生效夹到 256–1344，向下对齐 16 |
+| `--duration` `--fps` | 时长 0–60，帧率 1–60。时长大于 0 时换算帧数，对齐 `17k+5`，上限 124。省略则 73 帧 |
+| `--steps` | 1–8，默认 4 |
+| `--seed` | 省略或 `-1` 为随机 |
+
+MCP 工具名 `autodl_video_submit_demo`（只覆盖玩法和参考图）。真算力去掉 `--demo`，且编排与隧道已就绪；该调用不进 MCP。
 
 真算力（需 `AUTODL_ALLOW_POWER=true` 才允许开机；提交真任务需明确授权）：
 
@@ -135,7 +145,7 @@ AUTODL_INSTANCE_UUID=
 ORCH_BASE=http://127.0.0.1:8090
 COMFYUI_ENDPOINT=http://127.0.0.1:8188
 LLM_BASE_URL=http://127.0.0.1:8088
-COMFYUI_SSH_HOST=connect.westc.seetacloud.com
+COMFYUI_SSH_HOST=connect.westd.seetacloud.com
 COMFYUI_SSH_PORT=
 COMFYUI_SSH_USER=root
 ```

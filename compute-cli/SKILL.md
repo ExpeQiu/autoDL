@@ -78,6 +78,7 @@ autodl job submit --modality video --play multi --images "./a.png|./b.png" --pro
 ```
 
 - `--play`：`text` 文生视频、`first_frame` 单图、`first_last_frame` 首尾帧、`multi` 多图（2–9 张，路径用 `|` 分隔）
+- 采样：`--width/--height` 默认 768，生效夹到 256–1344 并对齐 16；`--duration` 大于 0 才换算帧数，对齐 `17k+5` 且不超过 124，省略为 73 帧；`--steps` 1–8，默认 4；`--seed` 省略为随机。完整表见 `platform/guide/架构与契约.md`
 - 多图提示词按顺序写 `<Picture 1>` `<Picture 2>`
 - 真算力去掉 `--demo`。MCP 只暴露 `autodl_video_submit_demo`，不暴露无 `--demo` 的提交
 - 参数：`--modality` 为 `text|image|video`；`--prompt` 必填；`--workflow` 可选，视频留空时按 `--play` 选择

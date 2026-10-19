@@ -29,7 +29,7 @@ from autodl_cli.utils.errors import EXIT_AUTH, EXIT_COMPUTE_FAIL, EXIT_ERROR, EX
 from autodl_cli.utils.logger import setup_logger
 from autodl_cli import orch
 from autodl_cli import tunnel as tun
-from autodl_cli.video import PLAY_MODES, VideoRequestError, resolve_video_request
+from autodl_cli.video import PLAY_MODES, VideoRequestError, resolve_video_request, video_controls
 from autodl_cli import api as autodl_api
 
 log = logging.getLogger("autodl")
@@ -586,6 +586,12 @@ def _encode_image_arg(value: str) -> str:
 @click.option("--image", "images", multiple=True, help="参考图路径、data URL 或 http。可重复")
 @click.option("--images", "images_csv", default=None, help="多图路径，用 | 分隔。给 Agent 模板用")
 @click.option("--end-image", default=None, help="首尾帧的尾帧")
+@click.option("--width", type=int, default=None, help="64–4096，生效夹到 256–1344 并对齐 16。默认 768")
+@click.option("--height", type=int, default=None, help="同 width。默认 768")
+@click.option("--duration", type=float, default=None, help="秒，0–60。大于 0 才换算帧数，结果对齐 17k+5 且不超过 124")
+@click.option("--fps", type=int, default=None, help="1–60，默认按 24 换算")
+@click.option("--steps", type=int, default=None, help="1–8，默认 4")
+@click.option("--seed", type=int, default=None, help="省略或 -1 为随机")
 @click.option("--run-id", default=None)
 @click.pass_context
 def job_submit(
@@ -597,6 +603,12 @@ def job_submit(
     images: tuple[str, ...],
     images_csv: str | None,
     end_image: str | None,
+    width: int | None,
+    height: int | None,
+    duration: float | None,
+    fps: int | None,
+    steps: int | None,
+    seed: int | None,
     run_id: str | None,
 ) -> None:
     """提交任务。视频可带参考图。未授权 GPU 时必须 --demo。"""
@@ -611,6 +623,7 @@ def job_submit(
             images=encoded,
             end_image=end_encoded,
         )
+        controls = video_controls(width=width, height=height, duration=duration, fps=fps, steps=steps, seed=seed)
     except VideoRequestError as exc:
         env = make_envelope(module="job.submit", data_source=_source(bool(ctx.obj.get("demo"))), ok=False, items=[], error=str(exc))
         log.warning("job_submit_rejected", extra={"cmd": "job.submit", "status": "rejected"})
@@ -632,6 +645,12 @@ def job_submit(
                 image_ref=video.get("image_ref"),
                 end_image_ref=video.get("end_image_ref"),
                 image_refs=video.get("image_refs"),
+                width=controls.get("width"),
+                height=controls.get("height"),
+                duration=controls.get("duration"),
+                fps=controls.get("fps"),
+                steps=controls.get("steps"),
+                seed=controls.get("seed"),
             )
         except orch.OrchError as exc:
             _fail_orch(ctx, "job.submit", exc)
@@ -644,6 +663,7 @@ def job_submit(
         workflow_id=chosen_workflow,
         run_id=run_id,
         play_mode=video.get("play_mode"),
+        controls=controls,
     )
     _emit_job(ctx, "job.submit", job_row, "demo")
 

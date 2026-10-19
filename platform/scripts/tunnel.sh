@@ -64,7 +64,7 @@ PY
   eval "$overlay"
 fi
 
-HOST="${COMFYUI_SSH_HOST:-connect.westc.seetacloud.com}"
+HOST="${COMFYUI_SSH_HOST:-connect.westd.seetacloud.com}"
 PORT="${COMFYUI_SSH_PORT:-}"
 USER="${COMFYUI_SSH_USER:-root}"
 LOCAL_COMFY="${COMFYUI_LOCAL_PORT:-8188}"

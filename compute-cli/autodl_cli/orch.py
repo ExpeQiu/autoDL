@@ -81,6 +81,12 @@ def create_job(
     image_ref: str | None = None,
     end_image_ref: str | None = None,
     image_refs: list[str] | None = None,
+    width: int | None = None,
+    height: int | None = None,
+    duration: float | None = None,
+    fps: int | None = None,
+    steps: int | None = None,
+    seed: int | None = None,
     timeout_s: float = 180.0,
 ) -> dict[str, Any]:
     body: dict[str, Any] = {"modality": modality, "prompt": prompt}
@@ -96,6 +102,16 @@ def create_job(
         body["end_image_ref"] = end_image_ref
     if image_refs:
         body["image_refs"] = image_refs
+    for key, value in {
+        "width": width,
+        "height": height,
+        "duration": duration,
+        "fps": fps,
+        "steps": steps,
+        "seed": seed,
+    }.items():
+        if value is not None:
+            body[key] = value
     return request("POST", "/v1/jobs", json=body, timeout_s=timeout_s).json()
 
 

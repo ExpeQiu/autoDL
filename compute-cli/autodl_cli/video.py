@@ -87,3 +87,39 @@ def resolve_video_request(
         "workflow_id": WORKFLOW_BY_PLAY[mode],
         "image_refs": refs,
     }
+
+
+def video_controls(
+    *,
+    width: int | None = None,
+    height: int | None = None,
+    duration: float | None = None,
+    fps: int | None = None,
+    steps: int | None = None,
+    seed: int | None = None,
+) -> dict[str, Any]:
+    """只收集调用方显式写出的采样参数。省略表示用编排默认。"""
+    out: dict[str, Any] = {}
+    if width is not None:
+        if not 64 <= int(width) <= 4096:
+            raise VideoRequestError("width 取值 64–4096；生效时夹到 256–1344，再向下对齐 16")
+        out["width"] = int(width)
+    if height is not None:
+        if not 64 <= int(height) <= 4096:
+            raise VideoRequestError("height 取值 64–4096；生效时夹到 256–1344，再向下对齐 16")
+        out["height"] = int(height)
+    if duration is not None:
+        if not 0 <= float(duration) <= 60:
+            raise VideoRequestError("duration 取值 0–60 秒；0 或省略表示用默认帧数")
+        out["duration"] = float(duration)
+    if fps is not None:
+        if not 1 <= int(fps) <= 60:
+            raise VideoRequestError("fps 取值 1–60；只有 duration>0 时才参与换算帧数")
+        out["fps"] = int(fps)
+    if steps is not None:
+        if not 1 <= int(steps) <= 8:
+            raise VideoRequestError("steps 取值 1–8，默认 4")
+        out["steps"] = int(steps)
+    if seed is not None:
+        out["seed"] = int(seed)
+    return out

@@ -241,7 +241,7 @@ cyberspaceAI 侧 JSON 模板仍在：`lib/ai/clients/comfyui-workflow-*.json`。
 登录原文见 `guide/服务器&ssh.md`。隧道命令形态：
 
 ```bash
-ssh -L 8188:127.0.0.1:8188 -p <SSH端口> root@connect.westc.seetacloud.com
+ssh -L 8188:127.0.0.1:8188 -p <SSH端口> root@connect.westd.seetacloud.com
 ```
 
 保持该会话不断。本机再测：
@@ -254,7 +254,7 @@ curl -sS http://127.0.0.1:8188/system_stats
 
 ```bash
 ssh -N -o ServerAliveInterval=30 -o ExitOnForwardFailure=yes \
-  -L 8188:127.0.0.1:8188 -p <SSH端口> root@connect.westc.seetacloud.com
+  -L 8188:127.0.0.1:8188 -p <SSH端口> root@connect.westd.seetacloud.com
 ```
 
 `-N` 只转发不进 shell；`ExitOnForwardFailure` 在 8188 已被占用时直接失败，避免静默连上空端口。
@@ -289,7 +289,7 @@ COMFYUI_VIDEO_MODEL=wan2.1_fp8_e4m3fn.safetensors
 文档中有、代码未强制读取的 SSH 字段（留给隧道脚本，不要进客户端）：
 
 ```env
-COMFYUI_SSH_HOST=connect.westc.seetacloud.com
+COMFYUI_SSH_HOST=connect.westd.seetacloud.com
 COMFYUI_SSH_PORT=12345
 COMFYUI_SSH_PASSWORD=
 ```
@@ -463,7 +463,7 @@ Vplatform-CLI 当前走 **服务器1 MiniMax H3**（本实例无 Flux / Wan 文�
 | 项 | 值 |
 |----|----|
 | 工作流 | `15CLI/Vplatform-CLI/workflows/minimax_h3_txt2vid.json`、`minimax_h3_img2vid.json` |
-| 隧道 | `ssh -L 8188:127.0.0.1:8188 -p 30856 root@connect.westc.seetacloud.com` |
+| 隧道 | `ssh -L 8188:127.0.0.1:8188 -p 16659 root@connect.westd.seetacloud.com` |
 | 或脚本 | `bash /Volumes/Lexar/git/15CLI/Vplatform-CLI/scripts/autodl-tunnel.sh start` |
 
 ```bash
